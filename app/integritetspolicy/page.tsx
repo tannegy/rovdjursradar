@@ -12,7 +12,7 @@ export default function Integritetspolicy() {
   const strong = { color: '#e8e8e8' } as const;
 
   return (
-    <div style={{ background: '#0f0f0f', color: '#e8e8e8', minHeight: '100vh', overflow: 'auto' }}>
+    <div style={{ background: '#0f0f0f', color: '#e8e8e8', minHeight: '100vh', height: '100vh', overflow: 'auto' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px 64px' }}>
         <a href="/" style={{ color: '#D4A843', textDecoration: 'none', fontSize: '.8rem' }}>&larr; Tillbaka till kartan</a>
         <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', margin: '24px 0 4px', letterSpacing: '1px' }}>Integritetspolicy</h1>
