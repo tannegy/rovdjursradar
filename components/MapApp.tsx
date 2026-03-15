@@ -69,13 +69,11 @@ export default function MapApp() {
   // Fetch CMS content for About page
   const openAbout = useCallback(async () => {
     setAboutOpen(true);
-    if (Object.keys(cms).length === 0) {
-      try {
-        const res = await fetch('/api/content');
-        if (res.ok) setCms(await res.json());
-      } catch {}
-    }
-  }, [cms]);
+    try {
+      const res = await fetch('/api/content?t=' + Date.now());
+      if (res.ok) setCms(await res.json());
+    } catch {}
+  }, []);
 
   // Fetch sightings from API
   const fetchSightings = useCallback(async () => {
