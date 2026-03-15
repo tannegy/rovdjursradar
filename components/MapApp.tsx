@@ -54,6 +54,30 @@ export default function MapApp() {
   const [tileKey, setTileKey] = useState<keyof typeof TILE_LAYERS>('dark');
   const [toast, setToast] = useState('');
 
+  // Password gate
+  const [unlocked, setUnlocked] = useState(false);
+  const [gatePassword, setGatePassword] = useState('');
+  const [gateError, setGateError] = useState(false);
+
+  // Check if already unlocked on mount
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage.getItem('rr_unlocked') === '1') {
+        setUnlocked(true);
+      }
+    } catch {}
+  }, []);
+
+  const tryUnlock = () => {
+    if (gatePassword === 'sakerhetforalla') {
+      setUnlocked(true);
+      setGateError(false);
+      try { window.sessionStorage.setItem('rr_unlocked', '1'); } catch {}
+    } else {
+      setGateError(true);
+    }
+  };
+
   // Report form state
   const [rptSpecies, setRptSpecies] = useState('');
   const [rptObs, setRptObs] = useState('visual');
@@ -667,6 +691,32 @@ export default function MapApp() {
             <svg viewBox="0 0 40 40" fill="#D4A843" className="w-12 h-12 mx-auto mb-3 animate-pulse"><ellipse cx="12" cy="10" rx="4" ry="4.5"/><ellipse cx="24" cy="8" rx="3.5" ry="4"/><ellipse cx="33" cy="13" rx="3" ry="3.5"/><ellipse cx="5" cy="17" rx="3" ry="3.5"/><path d="M7 25 Q10 35 20 37 Q30 35 33 25 Q30 20 20 19 Q10 20 7 25Z"/></svg>
             <div className="text-[#D4A843] text-sm font-bold tracking-widest">ROVDJURSRADAR</div>
             <div className="text-[#666] text-xs mt-1">Laddar observationer...</div>
+          </div>
+        </div>
+      )}
+
+      {/* PASSWORD GATE */}
+      {!unlocked && (
+        <div style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,.85)',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
+          <div style={{background:'#161616',borderRadius:16,padding:'40px 32px',width:'100%',maxWidth:400,border:'1px solid rgba(255,255,255,.07)',textAlign:'center'}}>
+            <svg viewBox="0 0 40 40" fill="#D4A843" style={{width:48,height:48,margin:'0 auto 16px'}}><ellipse cx="12" cy="10" rx="4" ry="4.5"/><ellipse cx="24" cy="8" rx="3.5" ry="4"/><ellipse cx="33" cy="13" rx="3" ry="3.5"/><ellipse cx="5" cy="17" rx="3" ry="3.5"/><path d="M7 25 Q10 35 20 37 Q30 35 33 25 Q30 20 20 19 Q10 20 7 25Z"/></svg>
+            <h1 style={{fontSize:'1.1rem',fontWeight:800,letterSpacing:3,color:'#fff',marginBottom:4}}>ROVDJURSRADAR</h1>
+            <p style={{fontSize:'.75rem',color:'#D4A843',marginBottom:24}}>Kolla innan du går ut</p>
+            <p style={{fontSize:'.72rem',color:'#999',marginBottom:16,lineHeight:1.6}}>Rovdjursradar är i tidig betaversion. Ange lösenord för att komma in.</p>
+            <input
+              type="password"
+              placeholder="Lösenord"
+              value={gatePassword}
+              onChange={e => { setGatePassword(e.target.value); setGateError(false); }}
+              onKeyDown={e => e.key === 'Enter' && tryUnlock()}
+              style={{width:'100%',padding:'11px 14px',borderRadius:8,border:gateError ? '1.5px solid #B83230' : '1px solid rgba(255,255,255,.12)',background:'#1e1e1e',color:'#e8e8e8',fontFamily:'inherit',fontSize:'.85rem',marginBottom:12,outline:'none'}}
+            />
+            {gateError && <p style={{fontSize:'.7rem',color:'#B83230',marginBottom:8}}>Fel lösenord. Försök igen.</p>}
+            <button
+              onClick={tryUnlock}
+              style={{width:'100%',padding:'11px',borderRadius:8,border:0,background:'#2D5016',color:'#fff',fontFamily:'inherit',fontSize:'.85rem',fontWeight:700,cursor:'pointer'}}
+            >Öppna</button>
+            <p style={{fontSize:'.6rem',color:'#444',marginTop:16}}>Kontakta oss för åtkomst: info@rovdjursradar.se</p>
           </div>
         </div>
       )}
