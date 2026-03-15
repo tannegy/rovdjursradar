@@ -46,6 +46,7 @@ export default function MapApp() {
   const [reporting, setReporting] = useState(false);
   const [reportLL, setReportLL] = useState<{lat:number;lng:number}|null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [cms, setCms] = useState<Record<string,string>>({});
   const [heatOn, setHeatOn] = useState(false);
   const [clusterOn, setClusterOn] = useState(true);
   const [userLL, setUserLL] = useState<{lat:number;lng:number}|null>(null);
@@ -64,6 +65,17 @@ export default function MapApp() {
     setToast(msg);
     setTimeout(() => setToast(''), 2500);
   }, []);
+
+  // Fetch CMS content for About page
+  const openAbout = useCallback(async () => {
+    setAboutOpen(true);
+    if (Object.keys(cms).length === 0) {
+      try {
+        const res = await fetch('/api/content');
+        if (res.ok) setCms(await res.json());
+      } catch {}
+    }
+  }, [cms]);
 
   // Fetch sightings from API
   const fetchSightings = useCallback(async () => {
@@ -295,7 +307,7 @@ export default function MapApp() {
         </div>
         <div className="flex-1" />
         <button onClick={() => setListOpen(!listOpen)} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]">Lista</button>
-        <button onClick={() => setAboutOpen(true)} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]">Om</button>
+        <button onClick={() => openAbout()} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]">Om</button>
         <button onClick={() => showToast('Swish: 123-456 78 90')} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-[rgba(212,168,67,.25)] text-[#D4A843]">Stöd</button>
       </nav>
 
@@ -594,21 +606,17 @@ export default function MapApp() {
             </div>
             <div className="px-7 py-6 text-[.82rem] text-[#999] leading-relaxed">
               <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Problemet</h2>
-              <p className="mb-3">Sverige har växande populationer av varg, björn, lodjur, järv och kungsörn. Innan du går ut i skogen finns det inget snabbt, publikt verktyg som svarar på frågan: finns det rovdjur i närheten?</p>
-              <p className="mb-4">Observationsdata finns — men det är splittrat över myndighetsrapporter, jaktföreningar, Facebook-grupper och mun-till-mun.</p>
+              {(cms.about_problem || 'Laddar...').split('\n').filter(Boolean).map((p, i) => <p key={i} className="mb-3">{p}</p>)}
 
               <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Lösningen</h2>
-              <p className="mb-3">Rovdjursradar är en realtidsradar för rovdjur — Flightradar24, fast för Sveriges stora rovdjur. Vi kombinerar tre datakällor:</p>
-              <ul className="space-y-1.5 mb-4 list-none">
-                <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" /><span><strong className="text-[#e8e8e8]">Officiella data</strong> — Rovbase, länsstyrelserna, DNA-prover, skadeärenden</span></li>
-                <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" /><span><strong className="text-[#e8e8e8]">Jaktlagsrapporter</strong> — från organiserade jaktlag runt om i Sverige</span></li>
-                <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" /><span><strong className="text-[#e8e8e8]">Crowdsourced</strong> — vem som helst kan rapportera anonymt på under 30 sekunder</span></li>
-              </ul>
+              {(cms.about_solution || 'Laddar...').split('\n').filter(Boolean).map((p, i) => (
+                <p key={i} className="mb-2">{p.startsWith('•') ? <span className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" /><span>{p.slice(2)}</span></span> : p}</p>
+              ))}
 
               <div className="grid grid-cols-3 gap-2.5 my-5">
-                <div className="bg-[#1e1e1e] rounded-lg p-3.5 text-center"><strong className="block text-xl font-extrabold text-[#D4A843]">~460</strong><span className="text-[.55rem] text-[#666] uppercase tracking-widest">Vargar</span></div>
-                <div className="bg-[#1e1e1e] rounded-lg p-3.5 text-center"><strong className="block text-xl font-extrabold text-[#D4A843]">~2 450</strong><span className="text-[.55rem] text-[#666] uppercase tracking-widest">Björnar</span></div>
-                <div className="bg-[#1e1e1e] rounded-lg p-3.5 text-center"><strong className="block text-xl font-extrabold text-[#D4A843]">~1 400</strong><span className="text-[.55rem] text-[#666] uppercase tracking-widest">Lodjur</span></div>
+                <div className="bg-[#1e1e1e] rounded-lg p-3.5 text-center"><strong className="block text-xl font-extrabold text-[#D4A843]">{cms.about_stats_wolf || '~460'}</strong><span className="text-[.55rem] text-[#666] uppercase tracking-widest">{cms.about_stats_wolf_label || 'Vargar'}</span></div>
+                <div className="bg-[#1e1e1e] rounded-lg p-3.5 text-center"><strong className="block text-xl font-extrabold text-[#D4A843]">{cms.about_stats_bear || '~2 450'}</strong><span className="text-[.55rem] text-[#666] uppercase tracking-widest">{cms.about_stats_bear_label || 'Björnar'}</span></div>
+                <div className="bg-[#1e1e1e] rounded-lg p-3.5 text-center"><strong className="block text-xl font-extrabold text-[#D4A843]">{cms.about_stats_lynx || '~1 400'}</strong><span className="text-[.55rem] text-[#666] uppercase tracking-widest">{cms.about_stats_lynx_label || 'Lodjur'}</span></div>
               </div>
 
               <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Observationstyper</h2>
@@ -624,14 +632,18 @@ export default function MapApp() {
 
               <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Varför nu?</h2>
               <ul className="space-y-1 mb-4 list-none">
-                <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" />Vargpopulationen växer och expanderar till nya regioner</li>
-                <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" />Debatten om rovdjursförvaltning är mer intensiv än någonsin</li>
-                <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" />Mobilanpassade utomhusverktyg finns för väder och laviner — men inget för rovdjur</li>
-                <li className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" />Crowdsourcade modeller bevisade av Waze, Flightradar24 och iNaturalist</li>
+                {(cms.about_why_now || '').split('\n').filter(Boolean).map((line, i) => (
+                  <li key={i} className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" />{line.replace(/^[•\-]\s*/, '')}</li>
+                ))}
               </ul>
 
               <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Samarbeta med oss</h2>
-              <p className="mb-2">Vi söker partners: jaktföreningar, kommuner, friluftsorganisationer, lantbruksgrupper. Vi ber inte om pengar — vi ber om signal, distribution och data.</p>
+              <p className="mb-2">{cms.about_partners || ''}</p>
+
+              {cms.about_vision && <>
+                <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Vår vision</h2>
+                <p className="mb-2">{cms.about_vision}</p>
+              </>}
             </div>
             <div className="px-7 py-4 border-t border-white/[.07] text-[.6rem] text-[#666] flex justify-between items-center">
               <span>Rovdjursradar · Mars 2026</span>

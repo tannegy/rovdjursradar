@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 const SPECIES: Record<string, { name: string; emoji: string; color: string }> = {
   wolf: { name: 'Varg', emoji: '🐺', color: '#B83230' },
@@ -14,22 +14,25 @@ const OBS: Record<string, string> = { visual: 'Synobs', tracks: 'Spår', camera:
 const SRC: Record<string, string> = { official: 'Rovbase', club: 'Jaktlag', crowd: 'Crowd', skandobs: 'Skandobs' };
 
 type Sighting = {
-  id: string;
-  predator_type: string;
-  observation_type: string;
-  source: string;
-  latitude: number;
-  longitude: number;
-  county: string;
-  sighted_at: string;
-  count: number;
-  notes: string | null;
-  verified: boolean;
-  flagged: boolean;
-  trust_score: number;
-  flag_count: number;
-  created_at: string;
+  id: string; predator_type: string; observation_type: string; source: string;
+  latitude: number; longitude: number; county: string; sighted_at: string;
+  count: number; notes: string | null; verified: boolean; flagged: boolean;
+  trust_score: number; flag_count: number; created_at: string;
 };
+
+const CONTENT_FIELDS = [
+  { key: 'about_problem', label: 'Problemet', rows: 5 },
+  { key: 'about_solution', label: 'Lösningen', rows: 8 },
+  { key: 'about_stats_wolf', label: 'Statistik: Varg (siffra)', rows: 1 },
+  { key: 'about_stats_wolf_label', label: 'Statistik: Varg (etikett)', rows: 1 },
+  { key: 'about_stats_bear', label: 'Statistik: Björn (siffra)', rows: 1 },
+  { key: 'about_stats_bear_label', label: 'Statistik: Björn (etikett)', rows: 1 },
+  { key: 'about_stats_lynx', label: 'Statistik: Lodjur (siffra)', rows: 1 },
+  { key: 'about_stats_lynx_label', label: 'Statistik: Lodjur (etikett)', rows: 1 },
+  { key: 'about_why_now', label: 'Varför nu?', rows: 6 },
+  { key: 'about_partners', label: 'Samarbeta med oss', rows: 4 },
+  { key: 'about_vision', label: 'Vår vision', rows: 4 },
+];
 
 export default function AdminPage() {
   const [secret, setSecret] = useState('');
@@ -38,6 +41,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [filter, setFilter] = useState('all');
+  const [tab, setTab] = useState<'sightings' | 'content'>('sightings');
+  const [content, setContent] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState<string | null>(null);
 
   const showMsg = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
@@ -52,26 +58,47 @@ export default function AdminPage() {
     if (data.sightings) {
       setSightings(data.sightings);
       setLoggedIn(true);
+      fetchContent();
     } else {
       showMsg(data.error || 'Fel lösenord');
     }
     setLoading(false);
   }, [secret]);
 
+  const fetchContent = async () => {
+    const res = await fetch('/api/content');
+    if (res.ok) {
+      const data = await res.json();
+      setContent(data);
+    }
+  };
+
+  const saveContent = async (key: string, value: string) => {
+    setSaving(key);
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update_content', secret, content_key: key, content_value: value }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      showMsg('✓ Sparat: ' + key);
+    } else {
+      showMsg('Kunde inte spara');
+    }
+    setSaving(null);
+  };
+
   const doAction = async (action: string, id: string, label: string) => {
-    if (!confirm(`Är du säker? ${label}`)) return;
+    if (!confirm('Är du säker? ' + label)) return;
     const res = await fetch('/api/admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, secret, sighting_id: id }),
     });
     const data = await res.json();
-    if (data.success) {
-      showMsg(`✓ ${label} klar`);
-      fetchSightings();
-    } else {
-      showMsg('Misslyckades');
-    }
+    if (data.success) { showMsg('✓ ' + label + ' klar'); fetchSightings(); }
+    else showMsg('Misslyckades');
   };
 
   const filtered = filter === 'all' ? sightings
@@ -82,29 +109,30 @@ export default function AdminPage() {
   const timeAgo = (d: string) => {
     const diff = Date.now() - new Date(d).getTime();
     const h = Math.floor(diff / 3600000);
-    if (h < 24) return `${h}h sedan`;
-    return `${Math.floor(h / 24)}d sedan`;
+    if (h < 24) return h + 'h sedan';
+    return Math.floor(h / 24) + 'd sedan';
+  };
+
+  // Styles
+  const S = {
+    page: { background: '#0f0f0f', color: '#e8e8e8', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' } as const,
+    input: { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,.12)', background: '#1e1e1e', color: '#e8e8e8', fontFamily: 'inherit', fontSize: '.85rem' } as const,
+    btn: { padding: '10px', borderRadius: 8, border: 0, background: '#2D5016', color: '#fff', fontFamily: 'inherit', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer', width: '100%' } as const,
+    textarea: { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,.12)', background: '#1e1e1e', color: '#e8e8e8', fontFamily: 'inherit', fontSize: '.8rem', resize: 'vertical' as const, lineHeight: 1.6 },
+    saveBtn: { padding: '6px 14px', borderRadius: 6, border: 0, background: '#2D5016', color: '#fff', fontFamily: 'inherit', fontSize: '.7rem', fontWeight: 600, cursor: 'pointer' } as const,
   };
 
   if (!loggedIn) {
     return (
-      <div style={{ background: '#0f0f0f', color: '#e8e8e8', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div style={{ ...S.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ background: '#161616', borderRadius: 12, padding: 32, width: '100%', maxWidth: 360, border: '1px solid rgba(255,255,255,.07)' }}>
           <h1 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: 4, letterSpacing: 1 }}>🐾 ADMIN</h1>
           <p style={{ fontSize: '.75rem', color: '#666', marginBottom: 20 }}>Rovdjursradar — Modereringspanel</p>
-          <input
-            type="password"
-            placeholder="Admin-lösenord"
-            value={secret}
+          <input type="password" placeholder="Admin-lösenord" value={secret}
             onChange={e => setSecret(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && fetchSightings()}
-            style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,.12)', background: '#1e1e1e', color: '#e8e8e8', fontFamily: 'inherit', fontSize: '.85rem', marginBottom: 12 }}
-          />
-          <button
-            onClick={fetchSightings}
-            disabled={loading}
-            style={{ width: '100%', padding: 10, borderRadius: 8, border: 0, background: '#2D5016', color: '#fff', fontFamily: 'inherit', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer' }}
-          >
+            style={{ ...S.input, marginBottom: 12 }} />
+          <button onClick={fetchSightings} disabled={loading} style={S.btn}>
             {loading ? 'Loggar in...' : 'Logga in'}
           </button>
           {msg && <p style={{ marginTop: 12, fontSize: '.75rem', color: '#B83230' }}>{msg}</p>}
@@ -114,79 +142,107 @@ export default function AdminPage() {
   }
 
   return (
-    <div style={{ background: '#0f0f0f', color: '#e8e8e8', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={S.page}>
       {/* Header */}
       <div style={{ background: '#161616', borderBottom: '1px solid rgba(255,255,255,.07)', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 10 }}>
         <span style={{ fontWeight: 800, fontSize: '.8rem', letterSpacing: 1 }}>🐾 ADMIN</span>
-        <span style={{ fontSize: '.65rem', color: '#666' }}>{sightings.length} totalt · {sightings.filter(s => s.flagged).length} flaggade · {sightings.filter(s => !s.verified).length} overifierade</span>
-        <a href="/" style={{ marginLeft: 'auto', fontSize: '.65rem', color: '#D4A843', textDecoration: 'none' }}>← Tillbaka till kartan</a>
-      </div>
-
-      {/* Filters */}
-      <div style={{ padding: '12px 20px', display: 'flex', gap: 6, flexWrap: 'wrap', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
-        {['all', 'flagged', 'unverified', ...Object.keys(SPECIES)].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            style={{
-              padding: '4px 10px', borderRadius: 5, fontSize: '.6rem', fontWeight: 600, cursor: 'pointer',
-              border: `1px solid ${filter === f ? '#D4A843' : 'rgba(255,255,255,.12)'}`,
-              background: filter === f ? 'rgba(212,168,67,.06)' : 'transparent',
-              color: filter === f ? '#D4A843' : '#666', fontFamily: 'inherit',
-            }}
-          >
-            {f === 'all' ? `Alla (${sightings.length})` : f === 'flagged' ? `Flaggade (${sightings.filter(s => s.flagged).length})` : f === 'unverified' ? `Overifierade (${sightings.filter(s => !s.verified && !s.flagged).length})` : `${SPECIES[f]?.emoji} ${SPECIES[f]?.name}`}
-          </button>
-        ))}
-        <button onClick={fetchSightings} style={{ padding: '4px 10px', borderRadius: 5, fontSize: '.6rem', fontWeight: 600, border: '1px solid rgba(255,255,255,.12)', background: 'transparent', color: '#999', cursor: 'pointer', fontFamily: 'inherit', marginLeft: 'auto' }}>🔄 Uppdatera</button>
+        <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
+          <button onClick={() => setTab('sightings')} style={{
+            padding: '5px 12px', borderRadius: 5, fontSize: '.65rem', fontWeight: 600, cursor: 'pointer',
+            border: tab === 'sightings' ? '1px solid #D4A843' : '1px solid rgba(255,255,255,.12)',
+            background: tab === 'sightings' ? 'rgba(212,168,67,.06)' : 'transparent',
+            color: tab === 'sightings' ? '#D4A843' : '#666', fontFamily: 'inherit'
+          }}>Observationer ({sightings.length})</button>
+          <button onClick={() => setTab('content')} style={{
+            padding: '5px 12px', borderRadius: 5, fontSize: '.65rem', fontWeight: 600, cursor: 'pointer',
+            border: tab === 'content' ? '1px solid #D4A843' : '1px solid rgba(255,255,255,.12)',
+            background: tab === 'content' ? 'rgba(212,168,67,.06)' : 'transparent',
+            color: tab === 'content' ? '#D4A843' : '#666', fontFamily: 'inherit'
+          }}>Om-sidan (Innehåll)</button>
+        </div>
+        <a href="/" style={{ marginLeft: 'auto', fontSize: '.65rem', color: '#D4A843', textDecoration: 'none' }}>← Kartan</a>
       </div>
 
       {/* Toast */}
       {msg && <div style={{ position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)', background: '#2D5016', color: '#fff', padding: '8px 16px', borderRadius: 6, fontSize: '.75rem', fontWeight: 600, zIndex: 20 }}>{msg}</div>}
 
-      {/* Sightings list */}
-      <div style={{ padding: '0 20px 40px' }}>
-        {filtered.map(s => {
-          const sp = SPECIES[s.predator_type] || { name: s.predator_type, emoji: '?', color: '#666' };
-          return (
-            <div key={s.id} style={{
-              display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 0',
-              borderBottom: '1px solid rgba(255,255,255,.05)',
-              opacity: s.flagged ? 0.4 : 1,
-            }}>
-              {/* Species icon */}
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: sp.color + '22', border: `2px solid ${sp.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{sp.emoji}</div>
-
-              {/* Info */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: 700, fontSize: '.8rem' }}>{sp.name}</span>
-                  <span style={{ fontSize: '.5rem', fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: s.verified ? 'rgba(45,80,22,.2)' : 'rgba(255,255,255,.06)', color: s.verified ? '#2D5016' : '#666' }}>{s.verified ? 'VERIFIERAD' : 'OVERIFIERAD'}</span>
-                  {s.flagged && <span style={{ fontSize: '.5rem', fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: 'rgba(184,50,48,.15)', color: '#B83230' }}>FLAGGAD</span>}
-                  <span style={{ fontSize: '.5rem', fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'rgba(212,168,67,.1)', color: '#D4A843' }}>{OBS[s.observation_type] || s.observation_type}</span>
-                  <span style={{ fontSize: '.5rem', color: '#666' }}>{SRC[s.source] || s.source}</span>
-                </div>
-                <div style={{ fontSize: '.65rem', color: '#666', marginTop: 3 }}>
-                  {s.count} djur · {s.county} · {timeAgo(s.sighted_at)} · trust: {s.trust_score} · flags: {s.flag_count}
-                </div>
-                {s.notes && <div style={{ fontSize: '.65rem', color: '#999', marginTop: 3, fontStyle: 'italic' }}>"{s.notes}"</div>}
-                <div style={{ fontSize: '.55rem', color: '#444', marginTop: 2 }}>ID: {s.id.slice(0, 8)}... · Pos: {s.latitude}, {s.longitude}</div>
+      {/* CONTENT EDITOR TAB */}
+      {tab === 'content' && (
+        <div style={{ padding: '20px', maxWidth: 700 }}>
+          <p style={{ fontSize: '.75rem', color: '#666', marginBottom: 20 }}>
+            Redigera texterna på Om-sidan. Ändringarna syns direkt efter att du sparar.
+          </p>
+          {CONTENT_FIELDS.map(field => (
+            <div key={field.key} style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ fontSize: '.7rem', fontWeight: 700, color: '#D4A843', textTransform: 'uppercase', letterSpacing: 1 }}>{field.label}</label>
+                <button
+                  onClick={() => saveContent(field.key, content[field.key] || '')}
+                  disabled={saving === field.key}
+                  style={{ ...S.saveBtn, opacity: saving === field.key ? 0.5 : 1 }}>
+                  {saving === field.key ? 'Sparar...' : 'Spara'}
+                </button>
               </div>
-
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                {!s.verified && (
-                  <button onClick={() => doAction('verify', s.id, 'Verifiera observation')} style={{ padding: '4px 8px', borderRadius: 4, fontSize: '.55rem', fontWeight: 600, border: '1px solid rgba(45,80,22,.3)', background: 'transparent', color: '#2D5016', cursor: 'pointer', fontFamily: 'inherit' }}>✓ Verifiera</button>
-                )}
-                {!s.flagged && (
-                  <button onClick={() => doAction('hide', s.id, 'Dölj observation')} style={{ padding: '4px 8px', borderRadius: 4, fontSize: '.55rem', fontWeight: 600, border: '1px solid rgba(212,168,67,.3)', background: 'transparent', color: '#D4A843', cursor: 'pointer', fontFamily: 'inherit' }}>👁 Dölj</button>
-                )}
-                <button onClick={() => doAction('delete', s.id, 'RADERA observation permanent')} style={{ padding: '4px 8px', borderRadius: 4, fontSize: '.55rem', fontWeight: 600, border: '1px solid rgba(184,50,48,.3)', background: 'transparent', color: '#B83230', cursor: 'pointer', fontFamily: 'inherit' }}>🗑 Radera</button>
-              </div>
+              <textarea
+                value={content[field.key] || ''}
+                onChange={e => setContent({ ...content, [field.key]: e.target.value })}
+                rows={field.rows}
+                style={{ ...S.textarea, minHeight: field.rows === 1 ? 36 : undefined }}
+              />
+              <div style={{ fontSize: '.55rem', color: '#444', marginTop: 2 }}>Nyckel: {field.key}</div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* SIGHTINGS TAB */}
+      {tab === 'sightings' && (
+        <>
+          {/* Filters */}
+          <div style={{ padding: '12px 20px', display: 'flex', gap: 6, flexWrap: 'wrap', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
+            {['all', 'flagged', 'unverified', ...Object.keys(SPECIES)].map(f => (
+              <button key={f} onClick={() => setFilter(f)} style={{
+                padding: '4px 10px', borderRadius: 5, fontSize: '.6rem', fontWeight: 600, cursor: 'pointer',
+                border: filter === f ? '1px solid #D4A843' : '1px solid rgba(255,255,255,.12)',
+                background: filter === f ? 'rgba(212,168,67,.06)' : 'transparent',
+                color: filter === f ? '#D4A843' : '#666', fontFamily: 'inherit',
+              }}>
+                {f === 'all' ? 'Alla (' + sightings.length + ')' : f === 'flagged' ? 'Flaggade (' + sightings.filter(s => s.flagged).length + ')' : f === 'unverified' ? 'Overifierade (' + sightings.filter(s => !s.verified && !s.flagged).length + ')' : (SPECIES[f]?.emoji || '') + ' ' + (SPECIES[f]?.name || f)}
+              </button>
+            ))}
+            <button onClick={fetchSightings} style={{ padding: '4px 10px', borderRadius: 5, fontSize: '.6rem', fontWeight: 600, border: '1px solid rgba(255,255,255,.12)', background: 'transparent', color: '#999', cursor: 'pointer', fontFamily: 'inherit', marginLeft: 'auto' }}>🔄 Uppdatera</button>
+          </div>
+
+          {/* Sightings list */}
+          <div style={{ padding: '0 20px 40px' }}>
+            {filtered.map(s => {
+              const sp = SPECIES[s.predator_type] || { name: s.predator_type, emoji: '?', color: '#666' };
+              return (
+                <div key={s.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,.05)', opacity: s.flagged ? 0.4 : 1 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: sp.color + '22', border: '2px solid ' + sp.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{sp.emoji}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, fontSize: '.8rem' }}>{sp.name}</span>
+                      <span style={{ fontSize: '.5rem', fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: s.verified ? 'rgba(45,80,22,.2)' : 'rgba(255,255,255,.06)', color: s.verified ? '#2D5016' : '#666' }}>{s.verified ? 'VERIFIERAD' : 'OVERIFIERAD'}</span>
+                      {s.flagged && <span style={{ fontSize: '.5rem', fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: 'rgba(184,50,48,.15)', color: '#B83230' }}>FLAGGAD</span>}
+                      <span style={{ fontSize: '.5rem', fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'rgba(212,168,67,.1)', color: '#D4A843' }}>{OBS[s.observation_type] || s.observation_type}</span>
+                      <span style={{ fontSize: '.5rem', color: '#666' }}>{SRC[s.source] || s.source}</span>
+                    </div>
+                    <div style={{ fontSize: '.65rem', color: '#666', marginTop: 3 }}>{s.count} djur · {s.county} · {timeAgo(s.sighted_at)} · trust: {s.trust_score} · flags: {s.flag_count}</div>
+                    {s.notes && <div style={{ fontSize: '.65rem', color: '#999', marginTop: 3, fontStyle: 'italic' }}>"{s.notes}"</div>}
+                    <div style={{ fontSize: '.55rem', color: '#444', marginTop: 2 }}>ID: {s.id.slice(0, 8)}... · Pos: {s.latitude}, {s.longitude}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                    {!s.verified && <button onClick={() => doAction('verify', s.id, 'Verifiera')} style={{ padding: '4px 8px', borderRadius: 4, fontSize: '.55rem', fontWeight: 600, border: '1px solid rgba(45,80,22,.3)', background: 'transparent', color: '#2D5016', cursor: 'pointer', fontFamily: 'inherit' }}>✓ Verifiera</button>}
+                    {!s.flagged && <button onClick={() => doAction('hide', s.id, 'Dölj')} style={{ padding: '4px 8px', borderRadius: 4, fontSize: '.55rem', fontWeight: 600, border: '1px solid rgba(212,168,67,.3)', background: 'transparent', color: '#D4A843', cursor: 'pointer', fontFamily: 'inherit' }}>👁 Dölj</button>}
+                    <button onClick={() => doAction('delete', s.id, 'RADERA')} style={{ padding: '4px 8px', borderRadius: 4, fontSize: '.55rem', fontWeight: 600, border: '1px solid rgba(184,50,48,.3)', background: 'transparent', color: '#B83230', cursor: 'pointer', fontFamily: 'inherit' }}>🗑 Radera</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

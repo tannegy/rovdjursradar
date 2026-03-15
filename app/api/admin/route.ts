@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const supabase = getSupabase();
 
   try {
-    const { action, secret, sighting_id } = await request.json();
+    const { action, secret, sighting_id, content_key, content_value } = await request.json();
 
     if (!secret) {
       return NextResponse.json({ error: 'Secret required' }, { status: 401 });
@@ -58,6 +58,15 @@ export async function POST(request: NextRequest) {
     if (action === 'verify' && sighting_id) {
       const { data } = await supabase.rpc('admin_verify_sighting', {
         sighting_id,
+        admin_secret: secret,
+      });
+      return NextResponse.json({ success: data });
+    }
+
+    if (action === 'update_content' && content_key) {
+      const { data } = await supabase.rpc('admin_update_content', {
+        content_key,
+        content_value: content_value || '',
         admin_secret: secret,
       });
       return NextResponse.json({ success: data });
