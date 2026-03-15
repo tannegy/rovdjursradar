@@ -597,8 +597,9 @@ export default function MapApp() {
 
       {/* ABOUT PAGE */}
       {aboutOpen && (
-        <div className="fixed inset-0 z-[3000] bg-black/70 backdrop-blur-md flex items-start justify-center overflow-y-auto p-4 pt-12" onClick={e => { if (e.target === e.currentTarget) setAboutOpen(false); }}>
-          <div className="bg-[#161616] rounded-xl w-full max-w-[680px] overflow-hidden">
+        <div className="fixed inset-0 z-[3000] bg-black/70 backdrop-blur-md" onClick={e => { if (e.target === e.currentTarget) setAboutOpen(false); }} style={{ overflowY: 'scroll', WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex items-start justify-center min-h-full p-4 pt-12 pb-12">
+          <div className="bg-[#161616] rounded-xl w-full max-w-[680px]" onClick={e => e.stopPropagation()}>
             <div className="bg-[#1B3A0C] px-7 py-8 relative">
               <button onClick={() => setAboutOpen(false)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/10 text-white flex items-center justify-center text-lg">×</button>
               <h1 className="text-2xl font-extrabold text-white tracking-wider">ROVDJURSRADAR</h1>
@@ -649,6 +650,7 @@ export default function MapApp() {
               <span>Rovdjursradar · Mars 2026</span>
               <span className="text-[#D4A843]">rovdjursradar.se</span>
             </div>
+          </div>
           </div>
         </div>
       )}
