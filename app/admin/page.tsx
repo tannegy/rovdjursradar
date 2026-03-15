@@ -1,6 +1,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 
 const SPECIES: Record<string, { name: string; emoji: string; color: string }> = {
   wolf: { name: 'Varg', emoji: '🐺', color: '#B83230' },
@@ -66,10 +72,11 @@ export default function AdminPage() {
   }, [secret]);
 
   const fetchContent = async () => {
-    const res = await fetch('/api/content');
-    if (res.ok) {
-      const data = await res.json();
-      setContent(data);
+    const { data, error } = await supabase.from('page_content').select('key, value');
+    if (!error && data) {
+      const c: Record<string, string> = {};
+      data.forEach((row: { key: string; value: string }) => { c[row.key] = row.value; });
+      setContent(c);
     }
   };
 
@@ -83,6 +90,7 @@ export default function AdminPage() {
     const data = await res.json();
     if (data.success) {
       showMsg('✓ Sparat: ' + key);
+      fetchContent();
     } else {
       showMsg('Kunde inte spara');
     }
