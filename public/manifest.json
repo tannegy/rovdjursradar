@@ -1,0 +1,13 @@
+{
+  "name": "Rovdjursradar",
+  "short_name": "Rovdjursradar",
+  "description": "Sveriges rovdjursradar — kolla innan du går ut",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#1B3A0C",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

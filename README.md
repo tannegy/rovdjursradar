@@ -1,2 +1,0 @@
-# rovdjursradar
-Rovdjursradar
