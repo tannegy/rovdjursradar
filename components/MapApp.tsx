@@ -597,57 +597,56 @@ export default function MapApp() {
 
       {/* ABOUT PAGE */}
       {aboutOpen && (
-        <div className="fixed inset-0 z-[3000] bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setAboutOpen(false)}>
-          <div className="bg-[#161616] rounded-xl w-full max-w-[680px] max-h-[90vh] flex flex-col" style={{overflow:'hidden'}} onClick={e => e.stopPropagation()}>
-            <div className="bg-[#1B3A0C] px-7 py-8 relative flex-shrink-0">
-              <button onClick={() => setAboutOpen(false)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/10 text-white flex items-center justify-center text-lg">×</button>
-              <h1 className="text-2xl font-extrabold text-white tracking-wider">ROVDJURSRADAR</h1>
-              <p className="text-[#D4A843] text-sm mt-1">Kolla innan du går ut — Know before you go</p>
+        <div className="about-overlay" onClick={() => setAboutOpen(false)}>
+          <div className="about-card" onClick={e => e.stopPropagation()}>
+            <div className="about-card-header">
+              <button onClick={() => setAboutOpen(false)} style={{position:'absolute',top:12,right:12,width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,.1)',border:0,color:'#fff',fontSize:'1rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
+              <h1 style={{fontSize:'1.6rem',fontWeight:800,color:'#fff',letterSpacing:2}}>ROVDJURSRADAR</h1>
+              <p style={{color:'#D4A843',fontSize:'.85rem',marginTop:4}}>Kolla innan du går ut — Know before you go</p>
             </div>
-            <div className="px-7 py-6 text-[.82rem] text-[#999] leading-relaxed flex-1" style={{overflowY:'auto'}}>
-              <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Problemet</h2>
-              {(cms.about_problem || 'Laddar...').split('\n').filter(Boolean).map((p, i) => <p key={i} className="mb-3">{p}</p>)}
+            <div className="about-card-body" style={{fontSize:'.82rem',color:'#999',lineHeight:1.7}}>
+              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'0 0 8px',letterSpacing:1}}>Problemet</h2>
+              {(cms.about_problem || 'Laddar...').split('\n').filter(Boolean).map((p, i) => <p key={i} style={{marginBottom:10}}>{p}</p>)}
 
-              <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Lösningen</h2>
+              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>Lösningen</h2>
               {(cms.about_solution || 'Laddar...').split('\n').filter(Boolean).map((p, i) => (
-                <p key={i} className="mb-2">{p.startsWith('•') ? <span className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" /><span>{p.slice(2)}</span></span> : p}</p>
+                <p key={i} style={{marginBottom:8}}>{p.startsWith('•') ? <span style={{display:'flex',gap:8,alignItems:'flex-start'}}><span style={{width:6,height:6,borderRadius:'50%',background:'#D4A843',marginTop:8,flexShrink:0}} /><span>{p.slice(2)}</span></span> : p}</p>
               ))}
 
-              <div className="grid grid-cols-3 gap-2.5 my-5">
-                <div className="bg-[#1e1e1e] rounded-lg p-3.5 text-center"><strong className="block text-xl font-extrabold text-[#D4A843]">{cms.about_stats_wolf || '~460'}</strong><span className="text-[.55rem] text-[#666] uppercase tracking-widest">{cms.about_stats_wolf_label || 'Vargar'}</span></div>
-                <div className="bg-[#1e1e1e] rounded-lg p-3.5 text-center"><strong className="block text-xl font-extrabold text-[#D4A843]">{cms.about_stats_bear || '~2 450'}</strong><span className="text-[.55rem] text-[#666] uppercase tracking-widest">{cms.about_stats_bear_label || 'Björnar'}</span></div>
-                <div className="bg-[#1e1e1e] rounded-lg p-3.5 text-center"><strong className="block text-xl font-extrabold text-[#D4A843]">{cms.about_stats_lynx || '~1 400'}</strong><span className="text-[.55rem] text-[#666] uppercase tracking-widest">{cms.about_stats_lynx_label || 'Lodjur'}</span></div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,margin:'20px 0'}}>
+                <div style={{background:'#1e1e1e',borderRadius:8,padding:'14px 12px',textAlign:'center'}}><strong style={{display:'block',fontSize:'1.3rem',fontWeight:800,color:'#D4A843'}}>{cms.about_stats_wolf || '~460'}</strong><span style={{fontSize:'.55rem',color:'#666',textTransform:'uppercase',letterSpacing:1}}>{cms.about_stats_wolf_label || 'Vargar'}</span></div>
+                <div style={{background:'#1e1e1e',borderRadius:8,padding:'14px 12px',textAlign:'center'}}><strong style={{display:'block',fontSize:'1.3rem',fontWeight:800,color:'#D4A843'}}>{cms.about_stats_bear || '~2 450'}</strong><span style={{fontSize:'.55rem',color:'#666',textTransform:'uppercase',letterSpacing:1}}>{cms.about_stats_bear_label || 'Björnar'}</span></div>
+                <div style={{background:'#1e1e1e',borderRadius:8,padding:'14px 12px',textAlign:'center'}}><strong style={{display:'block',fontSize:'1.3rem',fontWeight:800,color:'#D4A843'}}>{cms.about_stats_lynx || '~1 400'}</strong><span style={{fontSize:'.55rem',color:'#666',textTransform:'uppercase',letterSpacing:1}}>{cms.about_stats_lynx_label || 'Lodjur'}</span></div>
               </div>
 
-              <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Observationstyper</h2>
-              <p className="mb-2">Inspirerat av Rovbase kategoriserar vi alla observationer:</p>
-              <ul className="space-y-1 mb-4 list-none">
-                {Object.entries(OBS_TYPES).map(([k, v]) => (
-                  <li key={k} className="flex gap-2 items-start border-b border-white/[.07] py-1.5 last:border-b-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" />
-                    <span><strong className="text-[#e8e8e8]">{v}</strong> — {k === 'visual' ? 'direkt observation av djuret' : k === 'tracks' ? 'spår, spillning eller klösmärken' : k === 'camera' ? 'viltkamerabild eller video' : k === 'damage' ? 'skador på tamdjur eller egendom' : k === 'dead' ? 'funna döda rovdjur' : 'individ identifierad via DNA-prov'}</span>
-                  </li>
-                ))}
-              </ul>
+              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>Observationstyper</h2>
+              <p style={{marginBottom:8}}>Inspirerat av Rovbase kategoriserar vi alla observationer:</p>
+              {Object.entries(OBS_TYPES).map(([k, v]) => (
+                <div key={k} style={{display:'flex',gap:8,alignItems:'flex-start',borderBottom:'1px solid rgba(255,255,255,.07)',padding:'6px 0'}}>
+                  <span style={{width:6,height:6,borderRadius:'50%',background:'#D4A843',marginTop:8,flexShrink:0}} />
+                  <span><strong style={{color:'#e8e8e8'}}>{v}</strong> — {k === 'visual' ? 'direkt observation av djuret' : k === 'tracks' ? 'spår, spillning eller klösmärken' : k === 'camera' ? 'viltkamerabild eller video' : k === 'damage' ? 'skador på tamdjur eller egendom' : k === 'dead' ? 'funna döda rovdjur' : 'individ identifierad via DNA-prov'}</span>
+                </div>
+              ))}
 
-              <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Varför nu?</h2>
-              <ul className="space-y-1 mb-4 list-none">
-                {(cms.about_why_now || '').split('\n').filter(Boolean).map((line, i) => (
-                  <li key={i} className="flex gap-2 items-start"><span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] mt-2 flex-shrink-0" />{line.replace(/^[•\-]\s*/, '')}</li>
-                ))}
-              </ul>
+              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>Varför nu?</h2>
+              {(cms.about_why_now || '').split('\n').filter(Boolean).map((line, i) => (
+                <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:4}}>
+                  <span style={{width:6,height:6,borderRadius:'50%',background:'#D4A843',marginTop:8,flexShrink:0}} />
+                  <span>{line.replace(/^[•\-]\s*/, '')}</span>
+                </div>
+              ))}
 
-              <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Samarbeta med oss</h2>
-              <p className="mb-2">{cms.about_partners || ''}</p>
+              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>Samarbeta med oss</h2>
+              <p style={{marginBottom:10}}>{cms.about_partners || ''}</p>
 
               {cms.about_vision && <>
-                <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Vår vision</h2>
-                <p className="mb-2">{cms.about_vision}</p>
+                <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>Vår vision</h2>
+                <p style={{marginBottom:10}}>{cms.about_vision}</p>
               </>}
             </div>
-            <div className="px-7 py-4 border-t border-white/[.07] text-[.6rem] text-[#666] flex justify-between items-center">
+            <div className="about-card-footer" style={{fontSize:'.6rem',color:'#666',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span>Rovdjursradar · Mars 2026</span>
-              <span className="text-[#D4A843]">rovdjursradar.se</span>
+              <span style={{color:'#D4A843'}}>rovdjursradar.se</span>
             </div>
           </div>
         </div>
