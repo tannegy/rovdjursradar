@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { createHash } from 'crypto';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-function hashIP(ip: string): string {
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  );
+}
+
+async function hashIP(ip: string): Promise<string> {
+  const { createHash } = await import('crypto');
   return createHash('sha256').update(ip + 'rovdjursradar-salt-2026').digest('hex').slice(0, 16);
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = getSupabase();
   const params = request.nextUrl.searchParams;
 
   let query = supabase
@@ -58,25 +64,25 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase();
+
   try {
     const body = await request.json();
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const ipHash = hashIP(ip);
+    const ipHash = await hashIP(ip);
 
-    // Rate limit check
     const { data: allowed } = await supabase.rpc('check_rate_limit', { client_ip: ipHash });
     if (!allowed) {
       return NextResponse.json(
-        { error: 'Du har skickat för många rapporter. Vänta en timme.' },
+        { error: 'Du har skickat for manga rapporter. Vanta en timme.' },
         { status: 429 }
       );
     }
 
-    // Validate required fields
     const { predator_type, observation_type, source, latitude, longitude, sighted_at, count, notes } = body;
 
     if (!predator_type || !latitude || !longitude) {
-      return NextResponse.json({ error: 'Art och plats krävs.' }, { status: 400 });
+      return NextResponse.json({ error: 'Art och plats kravs.' }, { status: 400 });
     }
 
     const { data, error } = await supabase
