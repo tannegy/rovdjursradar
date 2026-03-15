@@ -473,6 +473,7 @@ export default function MapApp() {
         <div className="p-3">
           <div className="text-[.6rem] text-[#666] leading-relaxed">
             Rovdjursradar samlar officiella data, jaktlagsrapporter och crowdsourcade observationer. <span className="text-[#D4A843]">rovdjursradar.se</span> · v1.0
+            <a href="/integritetspolicy" className="block mt-2 text-[#666] hover:text-[#D4A843]" style={{textDecoration:'none',fontSize:'.58rem'}}>Integritetspolicy</a>
           </div>
         </div>
       </aside>
@@ -673,7 +674,7 @@ export default function MapApp() {
             </div>
             <div className="about-card-footer" style={{fontSize:'.6rem',color:'#666',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span>Rovdjursradar · Mars 2026</span>
-              <span style={{color:'#D4A843'}}>rovdjursradar.se</span>
+              <span style={{display:'flex',gap:12,alignItems:'center'}}><a href="/integritetspolicy" style={{color:'#666',textDecoration:'none'}}>Integritetspolicy</a><span style={{color:'#D4A843'}}>rovdjursradar.se</span></span>
             </div>
           </div>
         </div>
