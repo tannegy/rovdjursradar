@@ -115,7 +115,7 @@ export default function AdminPage() {
 
   // Styles
   const S = {
-    page: { background: '#0f0f0f', color: '#e8e8e8', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' } as const,
+    page: { background: '#0f0f0f', color: '#e8e8e8', minHeight: '100vh', height: '100vh', overflow: 'auto', fontFamily: 'Inter, system-ui, sans-serif' } as const,
     input: { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,.12)', background: '#1e1e1e', color: '#e8e8e8', fontFamily: 'inherit', fontSize: '.85rem' } as const,
     btn: { padding: '10px', borderRadius: 8, border: 0, background: '#2D5016', color: '#fff', fontFamily: 'inherit', fontSize: '.85rem', fontWeight: 700, cursor: 'pointer', width: '100%' } as const,
     textarea: { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,.12)', background: '#1e1e1e', color: '#e8e8e8', fontFamily: 'inherit', fontSize: '.8rem', resize: 'vertical' as const, lineHeight: 1.6 },
