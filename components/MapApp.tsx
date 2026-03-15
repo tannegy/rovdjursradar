@@ -597,14 +597,14 @@ export default function MapApp() {
 
       {/* ABOUT PAGE */}
       {aboutOpen && (
-        <div className="fixed inset-0 z-[3000] bg-black/70 backdrop-blur-md flex items-start justify-center overflow-y-auto p-4 pt-12 pb-12" onClick={e => { if (e.target === e.currentTarget) setAboutOpen(false); }}>
-          <div className="bg-[#161616] rounded-xl w-full max-w-[680px]" onClick={e => e.stopPropagation()}>
-            <div className="bg-[#1B3A0C] px-7 py-8 relative">
+        <div className="fixed inset-0 z-[3000] bg-black/70 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setAboutOpen(false)}>
+          <div className="bg-[#161616] rounded-xl w-full max-w-[680px] max-h-[90vh] flex flex-col" style={{overflow:'hidden'}} onClick={e => e.stopPropagation()}>
+            <div className="bg-[#1B3A0C] px-7 py-8 relative flex-shrink-0">
               <button onClick={() => setAboutOpen(false)} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/10 text-white flex items-center justify-center text-lg">×</button>
               <h1 className="text-2xl font-extrabold text-white tracking-wider">ROVDJURSRADAR</h1>
               <p className="text-[#D4A843] text-sm mt-1">Kolla innan du går ut — Know before you go</p>
             </div>
-            <div className="px-7 py-6 text-[.82rem] text-[#999] leading-relaxed">
+            <div className="px-7 py-6 text-[.82rem] text-[#999] leading-relaxed flex-1" style={{overflowY:'auto'}}>
               <h2 className="text-base font-bold text-[#D4A843] tracking-wide mb-2">Problemet</h2>
               {(cms.about_problem || 'Laddar...').split('\n').filter(Boolean).map((p, i) => <p key={i} className="mb-3">{p}</p>)}
 

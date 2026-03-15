@@ -21,6 +21,7 @@ html, body {
   font-family: 'Inter', system-ui, sans-serif;
   background: #0f0f0f;
   color: #e8e8e8;
+  overflow: hidden;
 }
 
 /* Leaflet overrides for dark theme */
