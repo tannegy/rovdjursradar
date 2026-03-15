@@ -8,6 +8,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
 import 'leaflet.heat';
 import { SPECIES, OBS_TYPES, SOURCES, COUNTIES, TILE_LAYERS, timeAgo, distKm } from '@/lib/config';
+import { supabase } from '@/lib/supabase';
 import type { Sighting } from '@/lib/supabase';
 
 // Extend L for heat layer typing
@@ -66,12 +67,16 @@ export default function MapApp() {
     setTimeout(() => setToast(''), 2500);
   }, []);
 
-  // Fetch CMS content for About page
+  // Fetch CMS content for About page - directly from Supabase
   const openAbout = useCallback(async () => {
     setAboutOpen(true);
     try {
-      const res = await fetch('/api/content?t=' + Date.now());
-      if (res.ok) setCms(await res.json());
+      const { data, error } = await supabase.from('page_content').select('key, value');
+      if (!error && data) {
+        const content: Record<string, string> = {};
+        data.forEach((row: { key: string; value: string }) => { content[row.key] = row.value; });
+        setCms(content);
+      }
     } catch {}
   }, []);
 
