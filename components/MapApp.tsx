@@ -546,7 +546,7 @@ export default function MapApp() {
 
       {/* Locate button */}
       {mobileTab === 'map' && (
-        <button onClick={geoLocate} className="fixed z-[900] w-9 h-9 rounded-full bg-[#161616] border border-white/[.12] text-white flex items-center justify-center hover:bg-[#1e1e1e] right-2 lg:right-[328px] bottom-[130px] lg:bottom-3">
+        <button onClick={geoLocate} className="fixed z-[900] w-9 h-9 rounded-full bg-[#161616] border border-white/[.12] text-white flex items-center justify-center hover:bg-[#1e1e1e] right-2 lg:right-[328px] bottom-[130px] lg:bottom-[72px]">
           <IconCrosshair />
         </button>
       )}
