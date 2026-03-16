@@ -66,7 +66,7 @@ export default function MapApp() {
     setLang(next);
     try { localStorage.setItem('rr_lang', next); } catch {}
   };
-  const speciesName = (key: string) => (t as any)[key] || SPECIES[key]?.name || key;
+  const speciesName = (key: string) => (t as any)[key] || (SPECIES as any)[key]?.name || key;
   const c = (key: string, fallback: string = '') => {
     if (lang === 'en' && cms[key + '_en']) return cms[key + '_en'];
     return cms[key] || fallback;
@@ -190,7 +190,7 @@ export default function MapApp() {
     if (heatRef.current) { map.removeLayer(heatRef.current); heatRef.current = null; }
 
     filtered.forEach(s => {
-      const cfg = SPECIES[s.predator_type];
+      const cfg = (SPECIES as any)[s.predator_type];
       const icon = L.divIcon({
         className: '',
         html: `<div style="width:28px;height:28px;border-radius:50%;background:${cfg.color};border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;position:relative">${cfg.emoji}${s.verified ? '<div style="position:absolute;bottom:-3px;right:-4px;width:11px;height:11px;border-radius:50%;background:#2D5016;border:1.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:6px;color:#fff">✓</div>' : ''}</div>`,
@@ -200,8 +200,8 @@ export default function MapApp() {
 
       const m = L.marker([s.latitude, s.longitude], { icon });
       const ago = timeAgo(s.sighted_at, lang);
-      const obsLabel = OBS_TYPES[s.observation_type] || s.observation_type;
-      const srcLabel = SOURCES[s.source] || s.source;
+      const obsLabel = (OBS_TYPES as any)[s.observation_type] || s.observation_type;
+      const srcLabel = (SOURCES as any)[s.source] || s.source;
 
       m.bindPopup(`
         <div style="font-weight:700;font-size:.85rem;color:${cfg.color};margin-bottom:4px">${cfg.emoji} ${(translations[lang] as any)[s.predator_type] || cfg.name}</div>
@@ -433,7 +433,7 @@ export default function MapApp() {
         {/* County */}
         <div className="p-3 border-b border-white/[.07]">
           <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">{lang === 'sv' ? 'Län' : 'County'}</span>
-          <select value={countyFilter} onChange={e => { setCountyFilter(e.target.value); if (e.target.value !== 'all' && COUNTIES[e.target.value]) { const c = COUNTIES[e.target.value]; mapRef.current?.fitBounds([[c.bounds[0],c.bounds[1]],[c.bounds[2],c.bounds[3]]]); }}}
+          <select value={countyFilter} onChange={e => { setCountyFilter(e.target.value); if (e.target.value !== 'all' && (COUNTIES as any)[e.target.value]) { const c = (COUNTIES as any)[e.target.value]; mapRef.current?.fitBounds([[c.bounds[0],c.bounds[1]],[c.bounds[2],c.bounds[3]]]); }}}
             className="w-full px-2 py-1.5 rounded border border-white/[.12] bg-[#1e1e1e] text-[#e8e8e8] text-[.72rem]">
             <option value="all">{lang === 'sv' ? 'Hela Sverige' : 'All of Sweden'}</option>
             {Object.entries(COUNTIES).map(([k,v]) => <option key={k} value={k}>{v.name}</option>)}
@@ -605,7 +605,7 @@ export default function MapApp() {
         </div>
         <div className="overflow-y-auto flex-1 px-2 pb-2">
           {sortedList.map(s => {
-            const sp = SPECIES[s.predator_type];
+            const sp = (SPECIES as any)[s.predator_type];
             const d = userLL ? Math.round(distKm(userLL.lat, userLL.lng, s.latitude, s.longitude)) : null;
             return (
               <div key={s.id} onClick={() => mapRef.current?.setView([s.latitude, s.longitude], 12)} className="flex items-center gap-2.5 p-2 rounded-lg cursor-pointer hover:bg-white/[.03] border-b border-white/[.07] last:border-b-0">
