@@ -282,7 +282,7 @@ export default function MapApp() {
   // ═══════════════════════════════════════════════════════════════════════════
   // ─── FILTER PANEL ──────────────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════════════
-  const FilterPanel = () => (
+  const filterPanelJsx = (
     <div className="overflow-y-auto flex-1 min-h-0">
       <div className="p-3 border-b border-white/[.07]">
         <div className="flex items-center justify-between mb-2">
@@ -373,7 +373,7 @@ export default function MapApp() {
   // ═══════════════════════════════════════════════════════════════════════════
   // ─── LIST PANEL ────────────────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════════════
-  const ListPanel = () => (
+  const listPanelJsx = (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/[.07] flex-shrink-0">
         <span className="text-[.78rem] font-bold">{t.listTitle}</span>
@@ -412,7 +412,7 @@ export default function MapApp() {
   // ═══════════════════════════════════════════════════════════════════════════
   // ─── REPORT FORM ───────────────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════════════
-  const ReportForm = () => (
+  const reportFormJsx = (
     <div className="p-3.5 pt-2 overflow-y-auto">
       <div className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg mb-2.5 text-[.65rem] border ${reportLL ? 'border-green-500/30 bg-green-500/[.04]' : 'border-white/[.12] bg-[#1e1e1e]'}`}>
         <span className={`w-2 h-2 rounded-full ${reportLL ? 'bg-green-400' : 'bg-[#666]'}`} />
@@ -505,12 +505,12 @@ export default function MapApp() {
 
       {/* ═══ DESKTOP: Left sidebar (filters, always visible) ═══ */}
       <aside className="hidden lg:flex fixed top-12 left-0 bottom-0 w-[300px] z-[5] bg-[#161616] border-r border-white/[.07] flex-col overflow-hidden">
-        <FilterPanel />
+        {filterPanelJsx}
       </aside>
 
       {/* ═══ DESKTOP: Right sidebar (list, always visible) ═══ */}
       <aside className="hidden lg:flex fixed top-12 right-0 bottom-0 w-[320px] z-[5] bg-[#161616] border-l border-white/[.07] flex-col overflow-hidden">
-        <ListPanel />
+        {listPanelJsx}
       </aside>
 
       {/* ═══ DESKTOP: Report drawer (slides over right panel) ═══ */}
@@ -519,7 +519,7 @@ export default function MapApp() {
           <h2 className="text-[.9rem] font-bold">{t.reportTitle}</h2>
           <button onClick={closeReport} className="w-6 h-6 rounded-full bg-white/[.06] text-white flex items-center justify-center text-sm">×</button>
         </div>
-        <ReportForm />
+        {reportFormJsx}
       </div>
 
       {/* ═══ MAP OVERLAYS ═══ */}
@@ -570,12 +570,12 @@ export default function MapApp() {
       {/* ═══ MOBILE: Overlaying panels ═══ */}
       {mobileTab === 'list' && (
         <div className="lg:hidden fixed top-12 left-0 right-0 bottom-[52px] z-[10] bg-[#161616]">
-          <ListPanel />
+          {listPanelJsx}
         </div>
       )}
       {mobileTab === 'filter' && (
         <div className="lg:hidden fixed top-12 left-0 right-0 bottom-[52px] z-[10] bg-[#161616] flex flex-col">
-          <FilterPanel />
+          {filterPanelJsx}
         </div>
       )}
 
@@ -585,7 +585,7 @@ export default function MapApp() {
           <h2 className="text-[.9rem] font-bold">{t.reportTitle}</h2>
           <button onClick={closeReport} className="w-6 h-6 rounded-full bg-white/[.06] text-white flex items-center justify-center text-sm">×</button>
         </div>
-        <ReportForm />
+        {reportFormJsx}
       </div>
 
       {/* ═══ MOBILE: Bottom tab bar ═══ */}
