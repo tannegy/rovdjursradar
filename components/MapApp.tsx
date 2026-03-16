@@ -215,7 +215,7 @@ export default function MapApp() {
           <div class="rr-popup-icon" style="background:${cfg.color}22;border-color:${cfg.color}">${cfg.emoji}</div>
           <div>
             <div style="font-weight:800;font-size:.9rem;color:#fff;letter-spacing:.3px">${(translations[lang] as any)[s.predator_type] || cfg.name}</div>
-            <div style="font-size:.6rem;color:#666;margin-top:1px">${ago} · ${s.county || ''}</div>
+            <div style="font-size:.6rem;color:#666;margin-top:1px">${ago} · ${(COUNTIES as any)[s.county]?.name || s.county || ''}</div>
           </div>
         </div>
         <div class="rr-popup-badges">

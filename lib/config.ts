@@ -23,16 +23,27 @@ export const SOURCES = {
 } as const;
 
 export const COUNTIES: Record<string, { name: string; bounds: [number, number, number, number]; center: [number, number] }> = {
-  varmland: { name: 'Värmland', bounds: [59.3, 11.5, 60.5, 14.5], center: [59.9, 13.0] },
-  dalarna: { name: 'Dalarna', bounds: [60.0, 12.5, 62.0, 16.5], center: [61.0, 14.5] },
-  gavleborg: { name: 'Gävleborg', bounds: [60.5, 15.0, 62.0, 17.5], center: [61.2, 16.2] },
-  vasternorrland: { name: 'Västernorrland', bounds: [62.0, 16.0, 64.0, 19.5], center: [63.0, 17.7] },
-  jamtland: { name: 'Jämtland', bounds: [62.5, 12.0, 65.5, 17.0], center: [63.5, 14.5] },
-  vasterbotten: { name: 'Västerbotten', bounds: [63.5, 15.0, 66.5, 21.0], center: [65.0, 18.0] },
   norrbotten: { name: 'Norrbotten', bounds: [65.5, 16.0, 69.5, 24.0], center: [67.5, 20.0] },
+  vasterbotten: { name: 'Västerbotten', bounds: [63.5, 15.0, 66.5, 21.0], center: [65.0, 18.0] },
+  jamtland: { name: 'Jämtland', bounds: [62.5, 12.0, 65.5, 17.0], center: [63.5, 14.5] },
+  vasternorrland: { name: 'Västernorrland', bounds: [62.0, 16.0, 64.0, 19.5], center: [63.0, 17.7] },
+  gavleborg: { name: 'Gävleborg', bounds: [60.5, 15.0, 62.0, 17.5], center: [61.2, 16.2] },
+  dalarna: { name: 'Dalarna', bounds: [60.0, 12.5, 62.0, 16.5], center: [61.0, 14.5] },
+  varmland: { name: 'Värmland', bounds: [59.3, 11.5, 60.5, 14.5], center: [59.9, 13.0] },
   orebro: { name: 'Örebro', bounds: [58.7, 14.5, 59.8, 15.8], center: [59.3, 15.2] },
   vastmanland: { name: 'Västmanland', bounds: [59.3, 15.5, 60.0, 17.0], center: [59.6, 16.2] },
+  uppsala: { name: 'Uppsala', bounds: [59.4, 17.0, 60.7, 18.5], center: [59.9, 17.6] },
   stockholm: { name: 'Stockholm', bounds: [58.8, 17.5, 60.0, 19.5], center: [59.3, 18.1] },
+  sodermanland: { name: 'Södermanland', bounds: [58.5, 15.5, 59.5, 17.5], center: [59.0, 16.7] },
+  ostergotland: { name: 'Östergötland', bounds: [58.0, 14.5, 59.0, 17.0], center: [58.4, 15.8] },
+  jonkoping: { name: 'Jönköping', bounds: [57.0, 13.5, 58.0, 15.5], center: [57.5, 14.2] },
+  kronoberg: { name: 'Kronoberg', bounds: [56.5, 13.5, 57.5, 15.5], center: [56.9, 14.5] },
+  kalmar: { name: 'Kalmar', bounds: [56.5, 15.0, 58.0, 17.0], center: [57.2, 16.3] },
+  gotland: { name: 'Gotland', bounds: [57.0, 18.0, 58.0, 19.5], center: [57.6, 18.4] },
+  blekinge: { name: 'Blekinge', bounds: [56.0, 14.5, 56.5, 16.0], center: [56.2, 15.2] },
+  skane: { name: 'Skåne', bounds: [55.3, 12.5, 56.5, 14.5], center: [55.9, 13.5] },
+  halland: { name: 'Halland', bounds: [56.3, 11.5, 57.5, 13.0], center: [56.9, 12.5] },
+  vastra_gotaland: { name: 'Västra Götaland', bounds: [57.5, 11.0, 59.0, 14.0], center: [58.3, 13.0] },
 };
 
 export const TILE_LAYERS = {
