@@ -154,7 +154,6 @@ html, body {
 .rr-popup-btn:hover { background: rgba(255,255,255,.08); color: #e8e8e8; }
 .rr-popup-btn-share { background: rgba(45,80,22,.15); color: #D4A843; border-color: rgba(212,168,67,.2); }
 .rr-popup-btn-share:hover { background: rgba(45,80,22,.3); }
-}
 .marker-cluster { background: rgba(45,80,22,.3) !important; }
 .marker-cluster div {
   background: #2D5016 !important;
