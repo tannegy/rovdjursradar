@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
   const supabase = getSupabase();
 
   try {
-    const { action, secret, sighting_id, content_key, content_value } = await request.json();
+    const { action, secret, sighting_id, content_key, content_value,
+      partner_id, name, description, logo_url, website_url, partner_type, sort_order, visible, id } = await request.json();
 
     if (!secret) {
       return NextResponse.json({ error: 'Secret required' }, { status: 401 });
@@ -68,6 +69,42 @@ export async function POST(request: NextRequest) {
         content_key,
         content_value: content_value || '',
         admin_secret: secret,
+      });
+      return NextResponse.json({ success: data });
+    }
+
+    if (action === 'add_partner') {
+      const { data } = await supabase.rpc('admin_add_partner', {
+        admin_secret: secret,
+        p_name: name,
+        p_description: description,
+        p_logo_url: logo_url || null,
+        p_website_url: website_url || null,
+        p_partner_type: partner_type || 'partner',
+        p_sort_order: sort_order || 0,
+      });
+      return NextResponse.json({ success: !!data, id: data });
+    }
+
+    if (action === 'update_partner' && id) {
+      const { data } = await supabase.rpc('admin_update_partner', {
+        admin_secret: secret,
+        p_id: id,
+        p_name: name,
+        p_description: description,
+        p_logo_url: logo_url || null,
+        p_website_url: website_url || null,
+        p_partner_type: partner_type || 'partner',
+        p_sort_order: sort_order || 0,
+        p_visible: visible !== false,
+      });
+      return NextResponse.json({ success: data });
+    }
+
+    if (action === 'delete_partner' && partner_id) {
+      const { data } = await supabase.rpc('admin_delete_partner', {
+        admin_secret: secret,
+        p_id: partner_id,
       });
       return NextResponse.json({ success: data });
     }

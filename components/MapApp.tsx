@@ -335,6 +335,7 @@ export default function MapApp() {
         <div className="flex-1" />
         <button onClick={() => setListOpen(!listOpen)} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]">Lista</button>
         <button onClick={() => openAbout()} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]">Om</button>
+        <a href="/partners" className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]" style={{textDecoration:'none'}}>Partners</a>
         <button onClick={() => showToast('Swish: 123-456 78 90')} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-[rgba(212,168,67,.25)] text-[#D4A843]">Stöd</button>
       </nav>
 
@@ -454,26 +455,13 @@ export default function MapApp() {
           </div>
         </div>
 
-        {/* Partners */}
-        <div className="p-3 border-b border-white/[.07]">
-          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">Partners</span>
-          {[
-            { logo: 'JF', name: 'Jägarförbundet', desc: 'Sveriges jaktorganisation', badge: 'Partner' },
-            { logo: 'LS', name: 'Länsstyrelsen Värmland', desc: 'Regionalt rovdjursdata', badge: 'Data' },
-            { logo: 'STF', name: 'Turistföreningen', desc: 'Säkerhet på leden', badge: 'Partner' },
-          ].map((p, i) => (
-            <div key={i} className="bg-[#1e1e1e] rounded-lg p-2 flex items-center gap-2 mb-1 border border-white/[.07] cursor-pointer hover:bg-[#282828]">
-              <div className="w-8 h-8 rounded-md bg-[#282828] flex items-center justify-center text-[.55rem] font-bold text-[#D4A843] flex-shrink-0">{p.logo}</div>
-              <div className="flex-1 min-w-0"><div className="text-[.7rem] font-semibold text-[#e8e8e8] truncate">{p.name}</div><div className="text-[.55rem] text-[#666]">{p.desc}</div></div>
-              <span className="text-[.48rem] font-bold px-1.5 py-0.5 rounded bg-[rgba(45,80,22,.2)] text-[#2D5016] uppercase tracking-wider flex-shrink-0">{p.badge}</span>
-            </div>
-          ))}
-        </div>
-
         <div className="p-3">
           <div className="text-[.6rem] text-[#666] leading-relaxed">
             Rovdjursradar samlar officiella data, jaktlagsrapporter och crowdsourcade observationer. <span className="text-[#D4A843]">rovdjursradar.se</span> · v1.0
-            <a href="/integritetspolicy" className="block mt-2 text-[#666] hover:text-[#D4A843]" style={{textDecoration:'none',fontSize:'.58rem'}}>Integritetspolicy</a>
+            <div className="flex gap-3 mt-2">
+              <a href="/partners" className="text-[#666] hover:text-[#D4A843]" style={{textDecoration:'none',fontSize:'.58rem'}}>Partners</a>
+              <a href="/integritetspolicy" className="text-[#666] hover:text-[#D4A843]" style={{textDecoration:'none',fontSize:'.58rem'}}>Integritetspolicy</a>
+            </div>
           </div>
         </div>
       </aside>

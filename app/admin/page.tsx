@@ -47,9 +47,13 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [filter, setFilter] = useState('all');
-  const [tab, setTab] = useState<'sightings' | 'content'>('sightings');
+  const [tab, setTab] = useState<'sightings' | 'content' | 'partners'>('sightings');
   const [content, setContent] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
+
+  // Partners state
+  const [partners, setPartners] = useState<{id:string;name:string;description:string;logo_url:string|null;website_url:string|null;partner_type:string;sort_order:number;visible:boolean}[]>([]);
+  const [editPartner, setEditPartner] = useState<{id?:string;name:string;description:string;logo_url:string;website_url:string;partner_type:string;sort_order:number;visible:boolean}|null>(null);
 
   const showMsg = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
@@ -65,6 +69,7 @@ export default function AdminPage() {
       setSightings(data.sightings);
       setLoggedIn(true);
       fetchContent();
+      fetchPartners();
     } else {
       showMsg(data.error || 'Fel lösenord');
     }
@@ -78,6 +83,39 @@ export default function AdminPage() {
       data.forEach((row: { key: string; value: string }) => { c[row.key] = row.value; });
       setContent(c);
     }
+  };
+
+  const fetchPartners = async () => {
+    const { data } = await supabase.from('partners').select('*').order('sort_order');
+    if (data) setPartners(data);
+  };
+
+  const savePartner = async () => {
+    if (!editPartner) return;
+    setSaving('partner');
+    if (editPartner.id) {
+      const res = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_partner', secret, ...editPartner }) });
+      const d = await res.json();
+      if (d.success) { showMsg('✓ Partner uppdaterad'); fetchPartners(); setEditPartner(null); }
+      else showMsg('Kunde inte spara');
+    } else {
+      const res = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_partner', secret, ...editPartner }) });
+      const d = await res.json();
+      if (d.success) { showMsg('✓ Partner tillagd'); fetchPartners(); setEditPartner(null); }
+      else showMsg('Kunde inte lägga till');
+    }
+    setSaving(null);
+  };
+
+  const deletePartner = async (id: string, name: string) => {
+    if (!confirm('Radera partner: ' + name + '?')) return;
+    const res = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete_partner', secret, partner_id: id }) });
+    const d = await res.json();
+    if (d.success) { showMsg('✓ Partner raderad'); fetchPartners(); }
+    else showMsg('Misslyckades');
   };
 
   const saveContent = async (key: string, value: string) => {
@@ -167,6 +205,12 @@ export default function AdminPage() {
             background: tab === 'content' ? 'rgba(212,168,67,.06)' : 'transparent',
             color: tab === 'content' ? '#D4A843' : '#666', fontFamily: 'inherit'
           }}>Om-sidan (Innehåll)</button>
+          <button onClick={() => setTab('partners')} style={{
+            padding: '5px 12px', borderRadius: 5, fontSize: '.65rem', fontWeight: 600, cursor: 'pointer',
+            border: tab === 'partners' ? '1px solid #D4A843' : '1px solid rgba(255,255,255,.12)',
+            background: tab === 'partners' ? 'rgba(212,168,67,.06)' : 'transparent',
+            color: tab === 'partners' ? '#D4A843' : '#666', fontFamily: 'inherit'
+          }}>Partners ({partners.length})</button>
         </div>
         <a href="/" style={{ marginLeft: 'auto', fontSize: '.65rem', color: '#D4A843', textDecoration: 'none' }}>← Kartan</a>
       </div>
@@ -250,6 +294,71 @@ export default function AdminPage() {
             })}
           </div>
         </>
+      )}
+
+      {/* PARTNERS TAB */}
+      {tab === 'partners' && (
+        <div style={{ padding: '20px', maxWidth: 700 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <p style={{ fontSize: '.75rem', color: '#666', margin: 0 }}>Hantera partners som visas på partnersidan.</p>
+            <button onClick={() => setEditPartner({ name: '', description: '', logo_url: '', website_url: '', partner_type: 'partner', sort_order: partners.length, visible: true })}
+              style={{ ...S.saveBtn, background: '#2D5016' }}>+ Lägg till</button>
+          </div>
+
+          {/* Edit form */}
+          {editPartner && (
+            <div style={{ background: '#1e1e1e', borderRadius: 10, padding: 20, border: '1px solid rgba(255,255,255,.1)', marginBottom: 20 }}>
+              <div style={{ fontSize: '.7rem', fontWeight: 700, color: '#D4A843', marginBottom: 12 }}>{editPartner.id ? 'Redigera partner' : 'Ny partner'}</div>
+              <div style={{ display: 'grid', gap: 10 }}>
+                <input placeholder="Namn" value={editPartner.name} onChange={e => setEditPartner({ ...editPartner, name: e.target.value })} style={S.input} />
+                <textarea placeholder="Beskrivning" value={editPartner.description} onChange={e => setEditPartner({ ...editPartner, description: e.target.value })} rows={3} style={S.textarea} />
+                <input placeholder="Logo URL (valfritt)" value={editPartner.logo_url} onChange={e => setEditPartner({ ...editPartner, logo_url: e.target.value })} style={S.input} />
+                <input placeholder="Webbplats URL (valfritt)" value={editPartner.website_url} onChange={e => setEditPartner({ ...editPartner, website_url: e.target.value })} style={S.input} />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <select value={editPartner.partner_type} onChange={e => setEditPartner({ ...editPartner, partner_type: e.target.value })} style={{ ...S.input, flex: 1 }}>
+                    <option value="partner">Partner</option>
+                    <option value="data">Datapartner</option>
+                    <option value="knowledge">Kunskapspartner</option>
+                    <option value="institutional">Myndighet</option>
+                  </select>
+                  <input type="number" placeholder="Ordning" value={editPartner.sort_order} onChange={e => setEditPartner({ ...editPartner, sort_order: parseInt(e.target.value) || 0 })} style={{ ...S.input, width: 80 }} />
+                </div>
+                <label style={{ fontSize: '.7rem', color: '#999', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input type="checkbox" checked={editPartner.visible} onChange={e => setEditPartner({ ...editPartner, visible: e.target.checked })} /> Synlig på partnersidan
+                </label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={savePartner} disabled={saving === 'partner' || !editPartner.name} style={{ ...S.saveBtn, opacity: saving === 'partner' ? 0.5 : 1 }}>
+                    {saving === 'partner' ? 'Sparar...' : editPartner.id ? 'Uppdatera' : 'Lägg till'}
+                  </button>
+                  <button onClick={() => setEditPartner(null)} style={{ ...S.saveBtn, background: '#333' }}>Avbryt</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Partner list */}
+          {partners.map(p => (
+            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,.05)', opacity: p.visible ? 1 : 0.4 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 8, background: '#282828', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.6rem', fontWeight: 700, color: '#D4A843', flexShrink: 0, overflow: 'hidden' }}>
+                {p.logo_url ? <img src={p.logo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : p.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontWeight: 700, fontSize: '.8rem' }}>{p.name}</span>
+                  <span style={{ fontSize: '.5rem', fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'rgba(212,168,67,.1)', color: '#D4A843' }}>{p.partner_type}</span>
+                  {!p.visible && <span style={{ fontSize: '.5rem', fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'rgba(184,50,48,.1)', color: '#B83230' }}>DOLD</span>}
+                </div>
+                <div style={{ fontSize: '.6rem', color: '#666', marginTop: 2 }}>{p.description.slice(0, 80)}...</div>
+              </div>
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                <button onClick={() => setEditPartner({ id: p.id, name: p.name, description: p.description, logo_url: p.logo_url || '', website_url: p.website_url || '', partner_type: p.partner_type, sort_order: p.sort_order, visible: p.visible })}
+                  style={{ padding: '4px 8px', borderRadius: 4, fontSize: '.55rem', fontWeight: 600, border: '1px solid rgba(212,168,67,.3)', background: 'transparent', color: '#D4A843', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Redigera</button>
+                <button onClick={() => deletePartner(p.id, p.name)}
+                  style={{ padding: '4px 8px', borderRadius: 4, fontSize: '.55rem', fontWeight: 600, border: '1px solid rgba(184,50,48,.3)', background: 'transparent', color: '#B83230', cursor: 'pointer', fontFamily: 'inherit' }}>🗑 Radera</button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
