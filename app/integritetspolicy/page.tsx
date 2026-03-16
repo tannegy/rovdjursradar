@@ -39,15 +39,19 @@ export default function Integritetspolicy() {
           <p style={p}>Vi använder sessionStorage i din webbläsare för att komma ihåg att du har loggat in med lösenord under pågående session. Denna data lagras enbart lokalt i din webbläsare och raderas när du stänger webbläsarfönstret.</p>
 
           <h3 style={h3}>2.5 Analysdata</h3>
-          <p style={p}>Vi avser att använda Plausible Analytics, ett EU-baserat, cookiefritt och integritetsbevarande analysverktyg. Plausible samlar inte in personuppgifter, använder inga cookies och överför ingen data till tredje part. All data lagras inom EU.</p>
+          <p style={p}>Vi använder Google Analytics för att samla in anonym besöksstatistik. Google Analytics använder cookies för att analysera hur besökare använder webbplatsen. Vi har aktiverat IP-anonymisering, vilket innebär att din IP-adress trunkeras av Google innan den lagras. Analysdata skickas till Googles servrar. Google Analytics laddas <strong style={strong}>enbart om du godkänner cookies</strong> via vår samtyckesbanner.</p>
 
           <h2 style={h2}>3. Rättslig grund för behandling</h2>
           <p style={p}>Vi behandlar personuppgifter baserat på följande rättsliga grunder enligt GDPR:</p>
+          <p style={p}><strong style={strong}>Samtycke (artikel 6.1.a):</strong> Google Analytics-cookies sätts enbart efter att du aktivt godkänt cookies via vår samtyckesbanner. Du kan när som helst återkalla ditt samtycke genom att rensa dina cookies eller klicka "Neka" om bannern visas igen.</p>
           <p style={p}><strong style={strong}>Berättigat intresse (artikel 6.1.f):</strong> Behandling av hashade IP-adresser för ratebegränsning baseras på vårt berättigade intresse att upprätthålla tjänstens kvalitet, förhindra missbruk och skydda tjänsten mot spam. Vi har bedömt att detta intresse väger tyngre än den minimala påverkan på den registrerades integritet, givet att IP-adressen hashas med envägskryptering och att hashen raderas automatiskt efter 30 dagar.</p>
           <p style={p}><strong style={strong}>Allmänt intresse (artikel 6.1.e):</strong> Publicering av anonymiserad observationsdata om rovdjur tjänar ett allmänt intresse genom att bidra till allmänhetens säkerhet och kunskap om rovdjursförekomst i Sverige.</p>
 
           <h2 style={h2}>4. Cookies och spårning</h2>
-          <p style={p}>Rovdjursradar använder <strong style={strong}>inga cookies</strong>. Vi sätter inga förstapartscookies och inga tredjepartscookies. Vi använder inga spårningstekniker som pixlar, fingerprinting eller liknande. Plausible Analytics, som vi avser att använda, är cookiefritt och GDPR-konformt utan samtycke.</p>
+          <p style={p}>Rovdjursradar använder cookies <strong style={strong}>enbart med ditt samtycke</strong>. Vid ditt första besök visas en samtyckesbanner. Om du godkänner sätts följande cookies:</p>
+          <p style={p}><strong style={strong}>Google Analytics (_ga, _ga_*):</strong> Används för anonym besöksstatistik. Hjälper oss förstå hur webbplatsen används. Varaktighet: upp till 2 år. IP-anonymisering är aktiverad.</p>
+          <p style={p}><strong style={strong}>Samtycke (localStorage):</strong> Vi sparar ditt val (acceptera/neka) i din webbläsares localStorage så att bannern inte visas igen.</p>
+          <p style={p}>Om du nekar cookies sätts inga spårningscookies och Google Analytics laddas inte. Du kan ändra ditt val genom att rensa webbläsarens data för rovdjursradar.se.</p>
 
           <h2 style={h2}>5. Datakällor</h2>
           <p style={p}>Rovdjursradar visar observationsdata från flera källor:</p>
@@ -67,15 +71,17 @@ export default function Integritetspolicy() {
           <p style={p}>Vi använder följande tjänsteleverantörer som kan behandla data på våra vägnar:</p>
           <p style={p}><strong style={strong}>Supabase Inc.</strong> — Databashantering. Data lagras på servrar i EU (Stockholm, eu-north-1). Supabase agerar som personuppgiftsbiträde och har ingått standardavtalsklausuler (SCC) för internationell dataöverföring.</p>
           <p style={p}><strong style={strong}>Vercel Inc.</strong> — Webbhotell och CDN. Vercel levererar webbsidan från sin edge-infrastruktur. Vercel omfattas av EU-US Data Privacy Framework.</p>
-          <p style={p}><strong style={strong}>Plausible Insights OÜ</strong> — Webbanalys (planerad). EU-baserat bolag (Estland). Ingen persondata behandlas.</p>
+          <p style={p}><strong style={strong}>Google LLC</strong> — Webbanalys (Google Analytics). Anonymiserad besöksstatistik. IP-anonymisering aktiverad. Google omfattas av EU-US Data Privacy Framework. Cookies sätts enbart efter ditt samtycke.</p>
 
           <h2 style={h2}>8. Internationell dataöverföring</h2>
           <p style={p}>Vår primära databas finns i EU (Stockholm). Vercel kan leverera statiskt innehåll från servrar utanför EU, men ingen persondata överförs i dessa anrop. Hashade IP-adresser lagras enbart i vår EU-baserade databas.</p>
+          <p style={p}>Om du godkänner cookies överförs anonymiserad analysdata till Googles servrar (som kan finnas utanför EU). Google omfattas av EU-US Data Privacy Framework, vilket ger en adekvat skyddsnivå för personuppgifter. IP-anonymisering är aktiverad, vilket innebär att din fullständiga IP-adress aldrig lagras av Google.</p>
 
           <h2 style={h2}>9. Lagringstider</h2>
           <p style={p}><strong style={strong}>Observationsdata</strong> (art, plats, tid, typ): Lagras tills vidare, då det utgör en del av en publik kunskapsbas om rovdjursförekomst.</p>
           <p style={p}><strong style={strong}>Hashade IP-adresser:</strong> Raderas automatiskt 30 dagar efter rapporteringstillfället.</p>
           <p style={p}><strong style={strong}>Sessiondata:</strong> Raderas automatiskt när webbläsarfönstret stängs.</p>
+          <p style={p}><strong style={strong}>Google Analytics-cookies:</strong> Upp till 2 år, eller tills du rensar dina cookies.</p>
 
           <h2 style={h2}>10. Dina rättigheter enligt GDPR</h2>
           <p style={p}>Som registrerad har du följande rättigheter:</p>
