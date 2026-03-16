@@ -38,6 +38,11 @@ const CONTENT_FIELDS = [
   { key: 'about_why_now', label: 'Varför nu?', rows: 6 },
   { key: 'about_partners', label: 'Samarbeta med oss', rows: 4 },
   { key: 'about_vision', label: 'Vår vision', rows: 4 },
+  { key: 'partners_hero_text', label: 'Partnersida: Intro-text', rows: 3 },
+  { key: 'partners_cta_title', label: 'Partnersida: CTA rubrik', rows: 1 },
+  { key: 'partners_cta_text', label: 'Partnersida: CTA text', rows: 4 },
+  { key: 'partners_cta_button', label: 'Partnersida: Knapp-text', rows: 1 },
+  { key: 'partners_cta_email', label: 'Partnersida: Kontakt-email', rows: 1 },
 ];
 
 export default function AdminPage() {

@@ -28,6 +28,7 @@ const TYPE_LABELS: Record<string, { label: string; color: string }> = {
 export default function PartnersPage() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cms, setCms] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchPartners = async () => {
@@ -38,7 +39,16 @@ export default function PartnersPage() {
       if (data) setPartners(data);
       setLoading(false);
     };
+    const fetchCms = async () => {
+      const { data } = await supabase.from('page_content').select('key, value');
+      if (data) {
+        const c: Record<string, string> = {};
+        data.forEach((row: { key: string; value: string }) => { c[row.key] = row.value; });
+        setCms(c);
+      }
+    };
     fetchPartners();
+    fetchCms();
   }, []);
 
   return (
@@ -57,7 +67,7 @@ export default function PartnersPage() {
       <div style={{ background: '#1B3A0C', padding: '48px 24px', textAlign: 'center' }}>
         <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff', letterSpacing: 2, marginBottom: 8 }}>Partners</h1>
         <p style={{ fontSize: '.9rem', color: '#D4A843', maxWidth: 600, margin: '0 auto', lineHeight: 1.6 }}>
-          Rovdjursradar byggs i samarbete med jaktföreningar, myndigheter, friluftsorganisationer och forskare. Tillsammans gör vi Sveriges rovdjursinformation tillgänglig för alla.
+          {cms.partners_hero_text || 'Rovdjursradar byggs i samarbete med jaktföreningar, myndigheter, friluftsorganisationer och forskare. Tillsammans gör vi Sveriges rovdjursinformation tillgänglig för alla.'}
         </p>
       </div>
 
@@ -162,12 +172,11 @@ export default function PartnersPage() {
           borderRadius: 12,
           textAlign: 'center',
         }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#D4A843', marginBottom: 8 }}>Bli partner</h2>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#D4A843', marginBottom: 8 }}>{cms.partners_cta_title || 'Bli partner'}</h2>
           <p style={{ fontSize: '.8rem', color: '#999', lineHeight: 1.7, maxWidth: 520, margin: '0 auto 16px' }}>
-            Vi söker samarbeten med jaktföreningar, kommuner, friluftsorganisationer och lantbruksgrupper.
-            Vi ber inte om pengar — vi ber om signal, distribution och data. Tidiga partners får inflytande över plattformens riktning.
+            {cms.partners_cta_text || 'Vi söker samarbeten med jaktföreningar, kommuner, friluftsorganisationer och lantbruksgrupper. Vi ber inte om pengar — vi ber om signal, distribution och data. Tidiga partners får inflytande över plattformens riktning.'}
           </p>
-          <a href="mailto:info@rovdjursradar.se" style={{
+          <a href={`mailto:${cms.partners_cta_email || 'info@rovdjursradar.se'}`} style={{
             display: 'inline-block',
             padding: '10px 24px',
             borderRadius: 8,
@@ -176,7 +185,7 @@ export default function PartnersPage() {
             fontSize: '.82rem',
             fontWeight: 700,
             textDecoration: 'none',
-          }}>Kontakta oss</a>
+          }}>{cms.partners_cta_button || 'Kontakta oss'}</a>
         </div>
 
         {/* Footer */}
