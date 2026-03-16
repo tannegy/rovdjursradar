@@ -320,7 +320,7 @@ export default function MapApp() {
   );
 
   return (
-    <div className={`h-full ${reporting ? 'reporting' : ''}`}>
+    <div className={`h-full overflow-hidden ${reporting ? 'reporting' : ''}`}>
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-[1000] bg-[rgba(15,15,15,.95)] backdrop-blur-2xl border-b border-white/[.07] h-12 flex items-center px-3 gap-2" style={{ transition: 'left .25s' }}>
         <button onClick={() => pinned ? setPinned(false) : setSidebarOpen(!sidebarOpen)} className="w-8 h-8 flex flex-col items-center justify-center gap-1 rounded-md">
