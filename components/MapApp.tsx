@@ -346,7 +346,7 @@ export default function MapApp() {
         <div className="grid grid-cols-5 gap-1">
           {(Object.entries(TILE_LAYERS) as [keyof typeof TILE_LAYERS, typeof TILE_LAYERS[keyof typeof TILE_LAYERS]][]).map(([key, cfg]) => (
             <button key={key} onClick={() => setTileKey(key)} className={`rounded-md overflow-hidden border-[1.5px] transition-all ${tileKey === key ? 'border-[#D4A843]' : 'border-transparent'}`}>
-             <div className="h-7" style={{ background: key === 'voyager' ? '#e8e0d0' : key === 'positron' ? '#e6e6e6' : key === 'dark' ? '#1a1a2e' : key === 'topo' ? '#ddd8c4' : '#2a3a2a' }}></div>
+              <div className="h-7" style={{ background: key === 'voyager' ? '#e8e0d0' : key === 'positron' ? '#e6e6e6' : key === 'dark' ? '#1a1a2e' : key === 'topo' ? '#ddd8c4' : '#2a3a2a' }}></div>
               <div className={`px-1 py-0.5 text-[.5rem] font-semibold bg-[#1e1e1e] text-center ${tileKey === key ? 'text-[#D4A843]' : 'text-[#666]'}`}>{cfg.name}</div>
             </button>
           ))}
