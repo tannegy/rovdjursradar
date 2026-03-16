@@ -42,9 +42,16 @@ export const TILE_LAYERS = {
   satellite: { name: 'Satellit', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', maxZoom: 18 },
 } as const;
 
-export function timeAgo(dateStr: string): string {
+export function timeAgo(dateStr: string, lang: string = 'sv'): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
+  if (lang === 'en') {
+    if (mins < 60) return `${mins} min ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+  }
   if (mins < 60) return `${mins} min sedan`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours} ${hours === 1 ? 'timme' : 'timmar'} sedan`;
