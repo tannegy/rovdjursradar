@@ -55,7 +55,7 @@ export default function MapApp() {
   const [cms, setCms] = useState<Record<string,string>>({});
   const [heatOn, setHeatOn] = useState(false);
   const [userLL, setUserLL] = useState<{lat:number;lng:number}|null>(null);
-  const [tileKey, setTileKey] = useState<keyof typeof TILE_LAYERS>('dark');
+  const [tileKey, setTileKey] = useState<keyof typeof TILE_LAYERS>('voyager');
   const [toast, setToast] = useState('');
   const [listSort, setListSort] = useState<'time'|'dist'>('time');
 
@@ -142,7 +142,7 @@ export default function MapApp() {
     if (!mapEl.current || mapRef.current) return;
     const map = L.map(mapEl.current, { center: [63, 16], zoom: 5, zoomControl: false, attributionControl: false });
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-    tileRef.current = L.tileLayer(TILE_LAYERS.dark.url, { maxZoom: TILE_LAYERS.dark.maxZoom }).addTo(map);
+    tileRef.current = L.tileLayer(TILE_LAYERS.voyager.url, { maxZoom: TILE_LAYERS.voyager.maxZoom }).addTo(map);
     clusterRef.current = (L as any).markerClusterGroup({ maxClusterRadius: 50 });
     map.addLayer(clusterRef.current!);
     mapRef.current = map;
@@ -343,10 +343,10 @@ export default function MapApp() {
       </div>
       <div className="p-3 border-b border-white/[.07]">
         <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">{t.mapLayers}</span>
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-5 gap-1">
           {(Object.entries(TILE_LAYERS) as [keyof typeof TILE_LAYERS, typeof TILE_LAYERS[keyof typeof TILE_LAYERS]][]).map(([key, cfg]) => (
             <button key={key} onClick={() => setTileKey(key)} className={`rounded-md overflow-hidden border-[1.5px] transition-all ${tileKey === key ? 'border-[#D4A843]' : 'border-transparent'}`}>
-              <div className="h-7" style={{ background: key === 'dark' ? '#1a1a2e' : key === 'topo' ? '#ddd8c4' : key === 'terrain' ? '#c5d5a5' : '#2a3a2a' }}></div>
+              <div className="h-7" style={{ background: key === 'voyager' ? '#e8e0d0' : key === 'positron' ? '#e6e6e6' : key === 'dark' ? '#1a1a2e' : key === 'topo' ? '#ddd8c4' : '#2a3a2a' }}></div>
               <div className={`px-1 py-0.5 text-[.5rem] font-semibold bg-[#1e1e1e] text-center ${tileKey === key ? 'text-[#D4A843]' : 'text-[#666]'}`}>{cfg.name}</div>
             </button>
           ))}
