@@ -203,17 +203,36 @@ export default function MapApp() {
       const obsLabel = (OBS_TYPES as any)[s.observation_type] || s.observation_type;
       const srcLabel = (SOURCES as any)[s.source] || s.source;
 
+      const shareUrl = `https://rovdjursradar.se/?lat=${s.latitude}&lng=${s.longitude}&z=12`;
+      const shareText = lang === 'sv'
+        ? `${(translations[lang] as any)[s.predator_type] || cfg.name} observerad — ${ago}`
+        : `${(translations[lang] as any)[s.predator_type] || cfg.name} sighted — ${ago}`;
+      const shareLabel = lang === 'sv' ? 'Dela' : 'Share';
+      const flagLabel = lang === 'sv' ? 'Flagga' : 'Flag';
+
       m.bindPopup(`
-        <div style="font-weight:700;font-size:.85rem;color:${cfg.color};margin-bottom:4px">${cfg.emoji} ${(translations[lang] as any)[s.predator_type] || cfg.name}</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">
-          ${s.verified ? `<span style="font-size:.5rem;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(45,80,22,.2);color:#2D5016">${translations[lang].verified}</span>` : ''}
-          <span style="font-size:.5rem;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(212,168,67,.1);color:#D4A843">${(translations[lang] as any)[s.observation_type] || obsLabel}</span>
+        <div class="rr-popup-header">
+          <div class="rr-popup-icon" style="background:${cfg.color}22;border-color:${cfg.color}">${cfg.emoji}</div>
+          <div>
+            <div style="font-weight:800;font-size:.9rem;color:#fff;letter-spacing:.3px">${(translations[lang] as any)[s.predator_type] || cfg.name}</div>
+            <div style="font-size:.6rem;color:#666;margin-top:1px">${ago} · ${s.county || ''}</div>
+          </div>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:.65rem;padding:2px 0;color:#999"><span>${translations[lang].sourceLabel}</span><strong style="color:#e8e8e8">${(translations[lang] as any)[s.source] || srcLabel}</strong></div>
-        <div style="display:flex;justify-content:space-between;font-size:.65rem;padding:2px 0;color:#999"><span>${translations[lang].reportCount}</span><strong style="color:#e8e8e8">${s.count} ${translations[lang].listAnimals}</strong></div>
-        <div style="display:flex;justify-content:space-between;font-size:.65rem;padding:2px 0;color:#999"><span>${lang === 'sv' ? 'Tid' : 'Time'}</span><strong style="color:#e8e8e8">${ago}</strong></div>
-        ${s.notes ? `<div style="color:#666;font-size:.65rem;margin-top:6px;font-style:italic;padding-top:6px;border-top:1px solid rgba(255,255,255,.07)">"${s.notes}"</div>` : ''}
-      `, { maxWidth: 250 });
+        <div class="rr-popup-badges">
+          ${s.verified ? `<span class="rr-popup-badge" style="background:rgba(45,80,22,.2);color:#4a9c2e">${translations[lang].verified}</span>` : ''}
+          <span class="rr-popup-badge" style="background:rgba(212,168,67,.1);color:#D4A843">${(translations[lang] as any)[s.observation_type] || obsLabel}</span>
+          <span class="rr-popup-badge" style="background:rgba(255,255,255,.05);color:#888">${(translations[lang] as any)[s.source] || srcLabel}</span>
+        </div>
+        <div class="rr-popup-rows">
+          <div class="rr-popup-row"><span class="rr-popup-row-label">${translations[lang].reportCount}</span><span class="rr-popup-row-value">${s.count} ${translations[lang].listAnimals}</span></div>
+          <div class="rr-popup-row"><span class="rr-popup-row-label">${lang === 'sv' ? 'Position' : 'Position'}</span><span class="rr-popup-row-value">${s.latitude.toFixed(2)}, ${s.longitude.toFixed(2)}</span></div>
+        </div>
+        ${s.notes ? `<div class="rr-popup-notes">"${s.notes}"</div>` : ''}
+        <div class="rr-popup-footer">
+          <button class="rr-popup-btn rr-popup-btn-share" onclick="(function(){if(navigator.share){navigator.share({title:'Rovdjursradar',text:'${shareText.replace(/'/g, "\\'")}',url:'${shareUrl}'})}else{navigator.clipboard.writeText('${shareUrl}');var b=this;b.textContent='✓ ${lang === 'sv' ? 'Kopierad' : 'Copied'}';setTimeout(function(){b.innerHTML='📤 ${shareLabel}'},2000)}}).call(this)">📤 ${shareLabel}</button>
+          <button class="rr-popup-btn" onclick="(function(){if(confirm('${translations[lang].flagConfirm}')){fetch('/api/sightings?flag=${s.id}').then(function(){var b=this;b.textContent='✓';}).catch(function(){})}}).call(this)">⚑ ${flagLabel}</button>
+        </div>
+      `, { maxWidth: 280, className: 'rr-popup' });
 
       cluster.addLayer(m);
     });
