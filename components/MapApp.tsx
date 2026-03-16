@@ -8,6 +8,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
 import 'leaflet.heat';
 import { SPECIES, OBS_TYPES, SOURCES, COUNTIES, TILE_LAYERS, timeAgo, distKm } from '@/lib/config';
+import { translations, Lang } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import type { Sighting } from '@/lib/supabase';
 
@@ -53,6 +54,23 @@ export default function MapApp() {
   const [userLL, setUserLL] = useState<{lat:number;lng:number}|null>(null);
   const [tileKey, setTileKey] = useState<keyof typeof TILE_LAYERS>('dark');
   const [toast, setToast] = useState('');
+
+  // Language
+  const [lang, setLang] = useState<Lang>('sv');
+  const t = translations[lang];
+  useEffect(() => {
+    try { const saved = localStorage.getItem('rr_lang'); if (saved === 'en' || saved === 'sv') setLang(saved); } catch {}
+  }, []);
+  const toggleLang = () => {
+    const next = lang === 'sv' ? 'en' : 'sv';
+    setLang(next);
+    try { localStorage.setItem('rr_lang', next); } catch {}
+  };
+  const speciesName = (key: string) => (t as any)[key] || SPECIES[key]?.name || key;
+  const c = (key: string, fallback: string = '') => {
+    if (lang === 'en' && cms[key + '_en']) return cms[key + '_en'];
+    return cms[key] || fallback;
+  };
 
   // Password gate
   const [unlocked, setUnlocked] = useState(false);
@@ -181,19 +199,19 @@ export default function MapApp() {
       });
 
       const m = L.marker([s.latitude, s.longitude], { icon });
-      const ago = timeAgo(s.sighted_at);
+      const ago = timeAgo(s.sighted_at, lang);
       const obsLabel = OBS_TYPES[s.observation_type] || s.observation_type;
       const srcLabel = SOURCES[s.source] || s.source;
 
       m.bindPopup(`
-        <div style="font-weight:700;font-size:.85rem;color:${cfg.color};margin-bottom:4px">${cfg.emoji} ${cfg.name}</div>
+        <div style="font-weight:700;font-size:.85rem;color:${cfg.color};margin-bottom:4px">${cfg.emoji} ${(translations[lang] as any)[s.predator_type] || cfg.name}</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">
-          ${s.verified ? '<span style="font-size:.5rem;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(45,80,22,.2);color:#2D5016">Verifierad</span>' : ''}
-          <span style="font-size:.5rem;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(212,168,67,.1);color:#D4A843">${obsLabel}</span>
+          ${s.verified ? `<span style="font-size:.5rem;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(45,80,22,.2);color:#2D5016">${translations[lang].verified}</span>` : ''}
+          <span style="font-size:.5rem;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(212,168,67,.1);color:#D4A843">${(translations[lang] as any)[s.observation_type] || obsLabel}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:.65rem;padding:2px 0;color:#999"><span>Källa</span><strong style="color:#e8e8e8">${srcLabel}</strong></div>
-        <div style="display:flex;justify-content:space-between;font-size:.65rem;padding:2px 0;color:#999"><span>Antal</span><strong style="color:#e8e8e8">${s.count} djur</strong></div>
-        <div style="display:flex;justify-content:space-between;font-size:.65rem;padding:2px 0;color:#999"><span>Tid</span><strong style="color:#e8e8e8">${ago}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:.65rem;padding:2px 0;color:#999"><span>${translations[lang].sourceLabel}</span><strong style="color:#e8e8e8">${(translations[lang] as any)[s.source] || srcLabel}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:.65rem;padding:2px 0;color:#999"><span>${translations[lang].reportCount}</span><strong style="color:#e8e8e8">${s.count} ${translations[lang].listAnimals}</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:.65rem;padding:2px 0;color:#999"><span>${lang === 'sv' ? 'Tid' : 'Time'}</span><strong style="color:#e8e8e8">${ago}</strong></div>
         ${s.notes ? `<div style="color:#666;font-size:.65rem;margin-top:6px;font-style:italic;padding-top:6px;border-top:1px solid rgba(255,255,255,.07)">"${s.notes}"</div>` : ''}
       `, { maxWidth: 250 });
 
@@ -207,7 +225,7 @@ export default function MapApp() {
       );
       heatRef.current.addTo(map);
     }
-  }, [filtered, heatOn]);
+  }, [filtered, heatOn, lang]);
 
   // Switch tile layer
   useEffect(() => {
@@ -238,7 +256,7 @@ export default function MapApp() {
   const submitReport = async () => {
     if (!rptSpecies) { showToast('Välj art'); return; }
     const ll = reportLL || userLL;
-    if (!ll) { showToast('Markera plats på kartan'); return; }
+    if (!ll) { showToast(lang === 'sv' ? 'Markera plats på kartan' : 'Mark a location on the map'); return; }
 
     try {
       const res = await fetch('/api/sightings', {
@@ -271,7 +289,7 @@ export default function MapApp() {
         reportMarkerRef.current = null;
       }
       fetchSightings();
-      showToast('✓ Rapport skickad!');
+      showToast(t.reportSuccess);
     } catch {
       showToast('Nätverksfel, försök igen');
     }
@@ -333,18 +351,19 @@ export default function MapApp() {
           <span className="font-extrabold text-[.7rem] tracking-[2px] text-white">ROVDJURSRADAR</span>
         </div>
         <div className="flex-1" />
-        <button onClick={() => setListOpen(!listOpen)} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]">Lista</button>
-        <button onClick={() => openAbout()} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]">Om</button>
-        <a href="/partners" className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]" style={{textDecoration:'none'}}>Partners</a>
-        <button onClick={() => showToast('Swish: 123-456 78 90')} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-[rgba(212,168,67,.25)] text-[#D4A843]">Stöd</button>
+        <button onClick={() => setListOpen(!listOpen)} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]">{t.list}</button>
+        <button onClick={() => openAbout()} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]">{t.about}</button>
+        <a href="/partners" className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]" style={{textDecoration:'none'}}>{t.partners}</a>
+        <button onClick={() => showToast('Swish: 123-456 78 90')} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-[rgba(212,168,67,.25)] text-[#D4A843]">{t.support}</button>
+        <button onClick={toggleLang} className="px-2 py-1 rounded-md text-[.6rem] font-bold border border-white/[.12] text-[#999] hover:bg-white/[.04]" title={lang === 'sv' ? 'Switch to English' : 'Byt till svenska'}>{lang === 'sv' ? 'EN' : 'SV'}</button>
       </nav>
 
       {/* REPORT BANNER */}
       {reporting && (
         <div className="fixed top-12 left-0 right-0 z-[955] bg-[rgba(212,168,67,.12)] border-b border-[rgba(212,168,67,.25)] px-4 py-1.5 flex items-center gap-2 text-[.7rem] text-[#D4A843] backdrop-blur-lg">
           <span className="w-2 h-2 rounded-full bg-[#D4A843] animate-pulse" />
-          <span>Klicka på kartan för att markera plats</span>
-          <button onClick={() => { setReporting(false); setReportLL(null); }} className="ml-auto px-2.5 py-0.5 rounded bg-white/[.08] border border-white/[.12] text-[#999] text-[.6rem] font-semibold">Avbryt</button>
+          <span>{t.reportInstruction}</span>
+          <button onClick={() => { setReporting(false); setReportLL(null); }} className="ml-auto px-2.5 py-0.5 rounded bg-white/[.08] border border-white/[.12] text-[#999] text-[.6rem] font-semibold">{t.reportCancel}</button>
         </div>
       )}
 
@@ -356,12 +375,12 @@ export default function MapApp() {
         {/* Species */}
         <div className="p-3 border-b border-white/[.07]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666]">Arter</span>
+            <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666]">{t.reportSpecies}</span>
             <div className="flex gap-1.5 items-center">
               <button onClick={() => {
                 const allOn = speciesFilter.size === 5;
                 setSpeciesFilter(allOn ? new Set() : new Set(['wolf','lynx','bear','eagle','wolverine']));
-              }} className="text-[.6rem] text-[#D4A843] bg-transparent border-none cursor-pointer">Alla/Inga</button>
+              }} className="text-[.6rem] text-[#D4A843] bg-transparent border-none cursor-pointer">{lang === 'sv' ? 'Alla/Inga' : 'All/None'}</button>
               <button onClick={() => { setPinned(!pinned); setSidebarOpen(true); setTimeout(() => mapRef.current?.invalidateSize(), 300); }}
                 className={`hidden lg:flex w-[26px] h-[26px] rounded items-center justify-center border transition-all ${pinned ? 'border-[#D4A843] bg-[rgba(212,168,67,.1)] text-[#D4A843]' : 'border-white/[.12] text-[#666]'}`}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`w-3 h-3 transition-transform ${pinned ? 'rotate-45' : ''}`}><path d="M12 17v5"/><path d="M9 2h6l-1 7h3l-4 7H9l1-7H7z"/></svg>
@@ -373,7 +392,7 @@ export default function MapApp() {
               <input type="checkbox" checked={speciesFilter.has(key)} onChange={() => toggleSpecies(key)} className="hidden" />
               <span className={`w-4 h-4 rounded border-[1.5px] flex items-center justify-center text-[8px] transition-all ${speciesFilter.has(key) ? 'border-[#D4A843] bg-[rgba(212,168,67,.15)] text-[#D4A843]' : 'border-white/[.12] text-transparent'}`}>✓</span>
               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: sp.color }} />
-              <span className="flex-1">{sp.name}</span>
+              <span className="flex-1">{speciesName(key)}</span>
               <span className="text-[.6rem] text-[#666] tabular-nums">{speciesCounts[key] || 0}</span>
             </label>
           ))}
@@ -381,12 +400,12 @@ export default function MapApp() {
 
         {/* Observation types */}
         <div className="p-3 border-b border-white/[.07]">
-          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">Observationstyp</span>
+          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">{t.reportObsType}</span>
           <div className="flex flex-wrap gap-1">
             {['all', ...Object.keys(OBS_TYPES)].map(key => (
               <button key={key} onClick={() => setObsFilter(key)}
                 className={`px-2 py-1 rounded text-[.6rem] font-semibold border transition-all ${obsFilter === key ? 'border-[#D4A843] text-[#D4A843] bg-[rgba(212,168,67,.06)]' : 'border-white/[.12] text-[#666]'}`}>
-                {key === 'all' ? 'Alla' : OBS_TYPES[key as keyof typeof OBS_TYPES]}
+                {key === 'all' ? t.all : (t as any)[key] || OBS_TYPES[key as keyof typeof OBS_TYPES]}
               </button>
             ))}
           </div>
@@ -394,14 +413,14 @@ export default function MapApp() {
 
         {/* Time */}
         <div className="p-3 border-b border-white/[.07]">
-          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">Tidsperiod</span>
+          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">{lang === 'sv' ? 'Tidsperiod' : 'Time period'}</span>
           <div className="flex flex-wrap gap-1">
             {[{h:24,l:'24h'},{h:72,l:'3d'},{h:168,l:'7d'},{h:720,l:'30d'},{h:8760,l:'1 år'}].map(({h,l}) => (
               <button key={h} onClick={() => { setHoursFilter(h); setCustomDates(false); }}
                 className={`px-2 py-1 rounded text-[.6rem] font-medium transition-all ${!customDates && hoursFilter === h ? 'bg-[#2D5016] text-white' : 'bg-white/[.04] text-[#666]'}`}>{l}</button>
             ))}
             <button onClick={() => setCustomDates(true)}
-              className={`px-2 py-1 rounded text-[.6rem] font-medium transition-all ${customDates ? 'bg-[#2D5016] text-white' : 'bg-white/[.04] text-[#666]'}`}>Datum</button>
+              className={`px-2 py-1 rounded text-[.6rem] font-medium transition-all ${customDates ? 'bg-[#2D5016] text-white' : 'bg-white/[.04] text-[#666]'}`}>{t.customDate}</button>
           </div>
           {customDates && (
             <div className="flex gap-1.5 mt-1.5">
@@ -413,17 +432,17 @@ export default function MapApp() {
 
         {/* County */}
         <div className="p-3 border-b border-white/[.07]">
-          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">Län</span>
+          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">{lang === 'sv' ? 'Län' : 'County'}</span>
           <select value={countyFilter} onChange={e => { setCountyFilter(e.target.value); if (e.target.value !== 'all' && COUNTIES[e.target.value]) { const c = COUNTIES[e.target.value]; mapRef.current?.fitBounds([[c.bounds[0],c.bounds[1]],[c.bounds[2],c.bounds[3]]]); }}}
             className="w-full px-2 py-1.5 rounded border border-white/[.12] bg-[#1e1e1e] text-[#e8e8e8] text-[.72rem]">
-            <option value="all">Hela Sverige</option>
+            <option value="all">{lang === 'sv' ? 'Hela Sverige' : 'All of Sweden'}</option>
             {Object.entries(COUNTIES).map(([k,v]) => <option key={k} value={k}>{v.name}</option>)}
           </select>
         </div>
 
         {/* Data sources */}
         <div className="p-3 border-b border-white/[.07]">
-          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">Datakällor</span>
+          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">{t.sourceLabel}</span>
           {Object.entries(SOURCES).map(([key, label]) => (
             <label key={key} className="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-white/[.04] text-[.75rem] text-[#999]">
               <input type="checkbox" checked={sourceFilter.has(key)} onChange={() => toggleSource(key)} className="hidden" />
@@ -435,7 +454,7 @@ export default function MapApp() {
 
         {/* Map layers */}
         <div className="p-3 border-b border-white/[.07]">
-          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">Kartlager</span>
+          <span className="text-[.55rem] font-bold tracking-[2px] uppercase text-[#666] block mb-2">{t.mapLayers}</span>
           <div className="grid grid-cols-2 gap-1">
             {(Object.entries(TILE_LAYERS) as [keyof typeof TILE_LAYERS, typeof TILE_LAYERS[keyof typeof TILE_LAYERS]][]).map(([key, cfg]) => (
               <button key={key} onClick={() => setTileKey(key)}
@@ -447,7 +466,7 @@ export default function MapApp() {
           </div>
           <div className="mt-2 space-y-1">
             <div className="flex items-center justify-between py-1">
-              <span className="text-[.72rem] text-[#999]">Heatmap</span>
+              <span className="text-[.72rem] text-[#999]">{t.heatmap}</span>
               <button onClick={() => setHeatOn(!heatOn)} className={`w-8 h-[18px] rounded-full relative transition-colors border ${heatOn ? 'bg-[#2D5016] border-[#2D5016]' : 'bg-[#282828] border-white/[.12]'}`}>
                 <span className={`absolute top-[2px] left-[2px] w-3 h-3 rounded-full bg-white transition-transform ${heatOn ? 'translate-x-[14px]' : ''}`} />
               </button>
@@ -457,10 +476,10 @@ export default function MapApp() {
 
         <div className="p-3">
           <div className="text-[.6rem] text-[#666] leading-relaxed">
-            Rovdjursradar samlar officiella data, jaktlagsrapporter och crowdsourcade observationer. <span className="text-[#D4A843]">rovdjursradar.se</span> · v1.0
+            {t.footerText} <span className="text-[#D4A843]">rovdjursradar.se</span> · v1.0
             <div className="flex gap-3 mt-2">
-              <a href="/partners" className="text-[#666] hover:text-[#D4A843]" style={{textDecoration:'none',fontSize:'.58rem'}}>Partners</a>
-              <a href="/integritetspolicy" className="text-[#666] hover:text-[#D4A843]" style={{textDecoration:'none',fontSize:'.58rem'}}>Integritetspolicy</a>
+              <a href="/partners" className="text-[#666] hover:text-[#D4A843]" style={{textDecoration:'none',fontSize:'.58rem'}}>{t.partners}</a>
+              <a href="/integritetspolicy" className="text-[#666] hover:text-[#D4A843]" style={{textDecoration:'none',fontSize:'.58rem'}}>{t.privacy}</a>
             </div>
           </div>
         </div>
@@ -474,7 +493,7 @@ export default function MapApp() {
         <div className="fixed top-14 right-3 z-[900] bg-[rgba(15,15,15,.92)] backdrop-blur-xl border border-white/[.12] rounded-lg px-3 py-1.5 flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full flex-shrink-0 ${nearbyCount === 0 ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,.4)]' : nearbyCount <= 2 ? 'bg-[#D4A843] shadow-[0_0_6px_rgba(212,168,67,.4)]' : 'bg-[#B83230] shadow-[0_0_6px_rgba(184,50,48,.4)]'}`} />
           <span className="text-[.65rem] text-[#e8e8e8]">
-            {nearbyCount === 0 ? 'Inga obs inom 20 km ✓' : `${nearbyCount} obs inom 20 km`}
+            {nearbyCount === 0 ? t.noNearby : `${nearbyCount} ${t.nearbyCount}`}
           </span>
         </div>
       )}
@@ -510,64 +529,64 @@ export default function MapApp() {
       {/* REPORT DRAWER */}
       <div className={`fixed top-12 right-0 bottom-0 w-[340px] z-[960] bg-[#161616] border-l border-white/[.07] transition-transform overflow-y-auto ${reporting ? 'translate-x-0' : 'translate-x-full'} max-md:w-full max-md:top-auto max-md:bottom-0 max-md:max-h-[55vh] max-md:border-l-0 max-md:border-t max-md:border-white/[.07] max-md:rounded-t-xl ${reporting ? 'max-md:translate-y-0' : 'max-md:translate-y-full'}`}>
         <div className="flex items-center justify-between px-3.5 pt-3">
-          <h2 className="text-[.9rem] font-bold">Rapportera observation</h2>
+          <h2 className="text-[.9rem] font-bold">{t.reportTitle}</h2>
           <button onClick={() => { setReporting(false); setReportLL(null); }} className="w-6 h-6 rounded-full bg-white/[.06] text-white flex items-center justify-center text-sm">×</button>
         </div>
         <div className="p-3.5 pt-2">
           {/* Location status */}
           <div className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg mb-2.5 text-[.65rem] border ${reportLL ? 'border-green-500/30 bg-green-500/[.04]' : 'border-white/[.12] bg-[#1e1e1e]'}`}>
             <span className={`w-2 h-2 rounded-full ${reportLL ? 'bg-green-400' : 'bg-[#666]'}`} />
-            <span>{reportLL ? `Plats: ${reportLL.lat.toFixed(3)}, ${reportLL.lng.toFixed(3)}` : 'Klicka på kartan för att markera plats'}</span>
+            <span>{reportLL ? `${t.reportLocationSet}: ${reportLL.lat.toFixed(3)}, ${reportLL.lng.toFixed(3)}` : t.reportInstruction}</span>
           </div>
 
           <div className="mb-3">
-            <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">Art</label>
+            <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">{t.reportSpecies}</label>
             <div className="grid grid-cols-5 gap-1">
               {Object.entries(SPECIES).map(([key, sp]) => (
                 <button key={key} onClick={() => setRptSpecies(key)}
                   className={`py-2 rounded-lg border text-center text-[.55rem] font-semibold transition-all ${rptSpecies === key ? 'border-[#D4A843] text-white bg-[rgba(212,168,67,.06)]' : 'border-white/[.12] text-[#666]'}`}>
-                  <span className="text-lg block mb-0.5">{sp.emoji}</span>{sp.name}
+                  <span className="text-lg block mb-0.5">{sp.emoji}</span>{speciesName(key)}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">Typ</label>
+            <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">{t.reportObsType}</label>
             <div className="flex flex-wrap gap-1">
               {Object.entries(OBS_TYPES).map(([key, label]) => (
                 <button key={key} onClick={() => setRptObs(key)}
-                  className={`px-2 py-1 rounded text-[.6rem] font-semibold border transition-all ${rptObs === key ? 'border-[#D4A843] text-[#D4A843] bg-[rgba(212,168,67,.06)]' : 'border-white/[.12] text-[#666]'}`}>{label}</button>
+                  className={`px-2 py-1 rounded text-[.6rem] font-semibold border transition-all ${rptObs === key ? 'border-[#D4A843] text-[#D4A843] bg-[rgba(212,168,67,.06)]' : 'border-white/[.12] text-[#666]'}`}>{(t as any)[key] || label}</button>
               ))}
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">Källa</label>
+            <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">{t.sourceLabel}</label>
             <select value={rptSource} onChange={e => setRptSource(e.target.value)} className="w-full px-2 py-1.5 rounded-lg border border-white/[.12] bg-[#1e1e1e] text-[#e8e8e8] text-[.75rem]">
-              <option value="crowd">Egen observation</option>
-              <option value="club">Jaktlag</option>
-              <option value="official">Officiell</option>
+              <option value="crowd">{lang === 'sv' ? 'Egen observation' : 'Own observation'}</option>
+              <option value="club">{lang === 'sv' ? 'Jaktlag' : 'Hunting club'}</option>
+              <option value="official">{lang === 'sv' ? 'Officiell' : 'Official'}</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-2 mb-3">
             <div>
-              <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">Antal</label>
+              <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">{t.reportCount}</label>
               <input type="number" min={1} max={50} value={rptCount} onChange={e => setRptCount(Number(e.target.value))} className="w-full px-2 py-1.5 rounded-lg border border-white/[.12] bg-[#1e1e1e] text-[#e8e8e8] text-[.75rem]" />
             </div>
             <div>
-              <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">Tidpunkt</label>
+              <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">{lang === 'sv' ? 'Tidpunkt' : 'Time'}</label>
               <input type="datetime-local" value={rptTime} onChange={e => setRptTime(e.target.value)} className="w-full px-2 py-1.5 rounded-lg border border-white/[.12] bg-[#1e1e1e] text-[#e8e8e8] text-[.65rem]" />
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">Anteckning</label>
-            <textarea value={rptNotes} onChange={e => setRptNotes(e.target.value)} placeholder="Spår, riktning, beteende..." className="w-full px-2 py-1.5 rounded-lg border border-white/[.12] bg-[#1e1e1e] text-[#e8e8e8] text-[.75rem] resize-y min-h-[48px]" />
+            <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">{lang === 'sv' ? 'Anteckning' : 'Note'}</label>
+            <textarea value={rptNotes} onChange={e => setRptNotes(e.target.value)} placeholder={lang === 'sv' ? 'Spår, riktning, beteende...' : 'Tracks, direction, behavior...'} className="w-full px-2 py-1.5 rounded-lg border border-white/[.12] bg-[#1e1e1e] text-[#e8e8e8] text-[.75rem] resize-y min-h-[48px]" />
           </div>
 
-          <button onClick={submitReport} className="w-full py-2.5 rounded-lg bg-[#2D5016] text-white font-bold text-[.82rem] hover:bg-[#3a6b1e]">Skicka rapport</button>
+          <button onClick={submitReport} className="w-full py-2.5 rounded-lg bg-[#2D5016] text-white font-bold text-[.82rem] hover:bg-[#3a6b1e]">{t.reportSubmit}</button>
         </div>
       </div>
 
@@ -580,8 +599,8 @@ export default function MapApp() {
           <span className="text-[.72rem] font-semibold">Observationer</span>
           <span className="text-[.6rem] text-[#666] bg-[#282828] px-1.5 py-0.5 rounded">{filtered.length}</span>
           <div className="ml-auto flex gap-0.5">
-            <button onClick={() => setListSort('time')} className={`px-2 py-0.5 rounded text-[.58rem] font-semibold ${listSort === 'time' ? 'bg-[#282828] text-white' : 'text-[#666]'}`}>Senaste</button>
-            <button onClick={() => setListSort('dist')} className={`px-2 py-0.5 rounded text-[.58rem] font-semibold ${listSort === 'dist' ? 'bg-[#282828] text-white' : 'text-[#666]'}`}>Närmaste</button>
+            <button onClick={() => setListSort('time')} className={`px-2 py-0.5 rounded text-[.58rem] font-semibold ${listSort === 'time' ? 'bg-[#282828] text-white' : 'text-[#666]'}`}>{t.listLatest}</button>
+            <button onClick={() => setListSort('dist')} className={`px-2 py-0.5 rounded text-[.58rem] font-semibold ${listSort === 'dist' ? 'bg-[#282828] text-white' : 'text-[#666]'}`}>{t.listNearest}</button>
           </div>
         </div>
         <div className="overflow-y-auto flex-1 px-2 pb-2">
@@ -593,18 +612,18 @@ export default function MapApp() {
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-base flex-shrink-0 border-2" style={{ background: sp.color + '22', borderColor: sp.color }}>{sp.emoji}</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[.75rem] font-semibold flex items-center gap-1.5">
-                    {sp.name}
+                    {speciesName(s.predator_type)}
                     <span className={`text-[.5rem] font-bold px-1 py-px rounded ${s.verified ? 'bg-[rgba(45,80,22,.2)] text-[#2D5016]' : 'bg-[rgba(212,168,67,.1)] text-[#D4A843]'}`}>
-                      {s.verified ? 'Verifierad' : OBS_TYPES[s.observation_type]}
+                      {s.verified ? t.verified : (t as any)[s.observation_type] || OBS_TYPES[s.observation_type]}
                     </span>
                   </div>
                   <div className="text-[.6rem] text-[#666] flex gap-2 mt-0.5">
-                    <span>{timeAgo(s.sighted_at)}</span>
-                    <span>{SOURCES[s.source]}</span>
-                    <span>{s.count} djur</span>
+                    <span>{timeAgo(s.sighted_at, lang)}</span>
+                    <span>{(t as any)[s.source] || SOURCES[s.source]}</span>
+                    <span>{s.count} {t.listAnimals}</span>
                   </div>
                 </div>
-                {d !== null && <div className="text-[.6rem] text-[#666] flex-shrink-0">{d} km</div>}
+                {d !== null && <div className="text-[.6rem] text-[#666] flex-shrink-0">{d} {t.kmAway}</div>}
               </div>
             );
           })}
@@ -618,51 +637,54 @@ export default function MapApp() {
             <div className="about-card-header">
               <button onClick={() => setAboutOpen(false)} style={{position:'absolute',top:12,right:12,width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,.1)',border:0,color:'#fff',fontSize:'1rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
               <h1 style={{fontSize:'1.6rem',fontWeight:800,color:'#fff',letterSpacing:2}}>ROVDJURSRADAR</h1>
-              <p style={{color:'#D4A843',fontSize:'.85rem',marginTop:4}}>Kolla innan du går ut — Know before you go</p>
+              <p style={{color:'#D4A843',fontSize:'.85rem',marginTop:4}}>{t.aboutTagline}</p>
             </div>
             <div className="about-card-body" style={{fontSize:'.82rem',color:'#999',lineHeight:1.7}}>
-              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'0 0 8px',letterSpacing:1}}>Problemet</h2>
-              {(cms.about_problem || 'Laddar...').split('\n').filter(Boolean).map((p, i) => <p key={i} style={{marginBottom:10}}>{p}</p>)}
+              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'0 0 8px',letterSpacing:1}}>{t.aboutSectionProblem}</h2>
+              {(c('about_problem', t.aboutLoading)).split('\n').filter(Boolean).map((p, i) => <p key={i} style={{marginBottom:10}}>{p}</p>)}
 
-              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>Lösningen</h2>
-              {(cms.about_solution || 'Laddar...').split('\n').filter(Boolean).map((p, i) => (
+              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>{t.aboutSectionSolution}</h2>
+              {(c('about_solution', t.aboutLoading)).split('\n').filter(Boolean).map((p, i) => (
                 <p key={i} style={{marginBottom:8}}>{p.startsWith('•') ? <span style={{display:'flex',gap:8,alignItems:'flex-start'}}><span style={{width:6,height:6,borderRadius:'50%',background:'#D4A843',marginTop:8,flexShrink:0}} /><span>{p.slice(2)}</span></span> : p}</p>
               ))}
 
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,margin:'20px 0'}}>
-                <div style={{background:'#1e1e1e',borderRadius:8,padding:'14px 12px',textAlign:'center'}}><strong style={{display:'block',fontSize:'1.3rem',fontWeight:800,color:'#D4A843'}}>{cms.about_stats_wolf || '~460'}</strong><span style={{fontSize:'.55rem',color:'#666',textTransform:'uppercase',letterSpacing:1}}>{cms.about_stats_wolf_label || 'Vargar'}</span></div>
-                <div style={{background:'#1e1e1e',borderRadius:8,padding:'14px 12px',textAlign:'center'}}><strong style={{display:'block',fontSize:'1.3rem',fontWeight:800,color:'#D4A843'}}>{cms.about_stats_bear || '~2 450'}</strong><span style={{fontSize:'.55rem',color:'#666',textTransform:'uppercase',letterSpacing:1}}>{cms.about_stats_bear_label || 'Björnar'}</span></div>
-                <div style={{background:'#1e1e1e',borderRadius:8,padding:'14px 12px',textAlign:'center'}}><strong style={{display:'block',fontSize:'1.3rem',fontWeight:800,color:'#D4A843'}}>{cms.about_stats_lynx || '~1 400'}</strong><span style={{fontSize:'.55rem',color:'#666',textTransform:'uppercase',letterSpacing:1}}>{cms.about_stats_lynx_label || 'Lodjur'}</span></div>
+                <div style={{background:'#1e1e1e',borderRadius:8,padding:'14px 12px',textAlign:'center'}}><strong style={{display:'block',fontSize:'1.3rem',fontWeight:800,color:'#D4A843'}}>{cms.about_stats_wolf || '~460'}</strong><span style={{fontSize:'.55rem',color:'#666',textTransform:'uppercase',letterSpacing:1}}>{c('about_stats_wolf_label', 'Vargar')}</span></div>
+                <div style={{background:'#1e1e1e',borderRadius:8,padding:'14px 12px',textAlign:'center'}}><strong style={{display:'block',fontSize:'1.3rem',fontWeight:800,color:'#D4A843'}}>{cms.about_stats_bear || '~2 450'}</strong><span style={{fontSize:'.55rem',color:'#666',textTransform:'uppercase',letterSpacing:1}}>{c('about_stats_bear_label', 'Björnar')}</span></div>
+                <div style={{background:'#1e1e1e',borderRadius:8,padding:'14px 12px',textAlign:'center'}}><strong style={{display:'block',fontSize:'1.3rem',fontWeight:800,color:'#D4A843'}}>{cms.about_stats_lynx || '~1 400'}</strong><span style={{fontSize:'.55rem',color:'#666',textTransform:'uppercase',letterSpacing:1}}>{c('about_stats_lynx_label', 'Lodjur')}</span></div>
               </div>
 
-              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>Observationstyper</h2>
-              <p style={{marginBottom:8}}>Inspirerat av Rovbase kategoriserar vi alla observationer:</p>
+              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>{lang === 'sv' ? 'Observationstyper' : 'Observation Types'}</h2>
+              <p style={{marginBottom:8}}>{lang === 'sv' ? 'Inspirerat av Rovbase kategoriserar vi alla observationer:' : 'Inspired by Rovbase, we categorize all observations:'}</p>
               {Object.entries(OBS_TYPES).map(([k, v]) => (
                 <div key={k} style={{display:'flex',gap:8,alignItems:'flex-start',borderBottom:'1px solid rgba(255,255,255,.07)',padding:'6px 0'}}>
                   <span style={{width:6,height:6,borderRadius:'50%',background:'#D4A843',marginTop:8,flexShrink:0}} />
-                  <span><strong style={{color:'#e8e8e8'}}>{v}</strong> — {k === 'visual' ? 'direkt observation av djuret' : k === 'tracks' ? 'spår, spillning eller klösmärken' : k === 'camera' ? 'viltkamerabild eller video' : k === 'damage' ? 'skador på tamdjur eller egendom' : k === 'dead' ? 'funna döda rovdjur' : 'individ identifierad via DNA-prov'}</span>
+                  <span><strong style={{color:'#e8e8e8'}}>{(t as any)[k] || v}</strong> — {lang === 'sv'
+                    ? (k === 'visual' ? 'direkt observation av djuret' : k === 'tracks' ? 'spår, spillning eller klösmärken' : k === 'camera' ? 'viltkamerabild eller video' : k === 'damage' ? 'skador på tamdjur eller egendom' : k === 'dead' ? 'funna döda rovdjur' : 'individ identifierad via DNA-prov')
+                    : (k === 'visual' ? 'direct observation of the animal' : k === 'tracks' ? 'tracks, droppings or claw marks' : k === 'camera' ? 'trail camera image or video' : k === 'damage' ? 'damage to livestock or property' : k === 'dead' ? 'dead predator found' : 'individual identified via DNA sample')
+                  }</span>
                 </div>
               ))}
 
-              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>Varför nu?</h2>
-              {(cms.about_why_now || '').split('\n').filter(Boolean).map((line, i) => (
+              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>{t.aboutSectionWhyNow}</h2>
+              {(c('about_why_now')).split('\n').filter(Boolean).map((line, i) => (
                 <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:4}}>
                   <span style={{width:6,height:6,borderRadius:'50%',background:'#D4A843',marginTop:8,flexShrink:0}} />
                   <span>{line.replace(/^[•\-]\s*/, '')}</span>
                 </div>
               ))}
 
-              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>Samarbeta med oss</h2>
-              <p style={{marginBottom:10}}>{cms.about_partners || ''}</p>
+              <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>{t.aboutSectionPartners}</h2>
+              <p style={{marginBottom:10}}>{c('about_partners')}</p>
 
-              {cms.about_vision && <>
-                <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>Vår vision</h2>
-                <p style={{marginBottom:10}}>{cms.about_vision}</p>
+              {(cms.about_vision || cms.about_vision_en) && <>
+                <h2 style={{fontSize:'1rem',fontWeight:700,color:'#D4A843',margin:'20px 0 8px',letterSpacing:1}}>{t.aboutSectionVision}</h2>
+                <p style={{marginBottom:10}}>{c('about_vision')}</p>
               </>}
             </div>
             <div className="about-card-footer" style={{fontSize:'.6rem',color:'#666',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span>Rovdjursradar · Mars 2026</span>
-              <span style={{display:'flex',gap:12,alignItems:'center'}}><a href="/integritetspolicy" style={{color:'#666',textDecoration:'none'}}>Integritetspolicy</a><span style={{color:'#D4A843'}}>rovdjursradar.se</span></span>
+              <span style={{display:'flex',gap:12,alignItems:'center'}}><a href="/integritetspolicy" style={{color:'#666',textDecoration:'none'}}>{t.privacy}</a><span style={{color:'#D4A843'}}>rovdjursradar.se</span></span>
             </div>
           </div>
         </div>
@@ -679,7 +701,7 @@ export default function MapApp() {
           <div className="text-center">
             <svg viewBox="0 0 40 40" fill="#D4A843" className="w-12 h-12 mx-auto mb-3 animate-pulse"><ellipse cx="12" cy="10" rx="4" ry="4.5"/><ellipse cx="24" cy="8" rx="3.5" ry="4"/><ellipse cx="33" cy="13" rx="3" ry="3.5"/><ellipse cx="5" cy="17" rx="3" ry="3.5"/><path d="M7 25 Q10 35 20 37 Q30 35 33 25 Q30 20 20 19 Q10 20 7 25Z"/></svg>
             <div className="text-[#D4A843] text-sm font-bold tracking-widest">ROVDJURSRADAR</div>
-            <div className="text-[#666] text-xs mt-1">Laddar observationer...</div>
+            <div className="text-[#666] text-xs mt-1">{t.loading}</div>
           </div>
         </div>
       )}
@@ -690,22 +712,22 @@ export default function MapApp() {
           <div style={{background:'#161616',borderRadius:16,padding:'40px 32px',width:'100%',maxWidth:400,border:'1px solid rgba(255,255,255,.07)',textAlign:'center'}}>
             <svg viewBox="0 0 40 40" fill="#D4A843" style={{width:48,height:48,margin:'0 auto 16px'}}><ellipse cx="12" cy="10" rx="4" ry="4.5"/><ellipse cx="24" cy="8" rx="3.5" ry="4"/><ellipse cx="33" cy="13" rx="3" ry="3.5"/><ellipse cx="5" cy="17" rx="3" ry="3.5"/><path d="M7 25 Q10 35 20 37 Q30 35 33 25 Q30 20 20 19 Q10 20 7 25Z"/></svg>
             <h1 style={{fontSize:'1.1rem',fontWeight:800,letterSpacing:3,color:'#fff',marginBottom:4}}>ROVDJURSRADAR</h1>
-            <p style={{fontSize:'.75rem',color:'#D4A843',marginBottom:24}}>Kolla innan du går ut</p>
-            <p style={{fontSize:'.72rem',color:'#999',marginBottom:16,lineHeight:1.6}}>Rovdjursradar är i tidig betaversion. Ange lösenord för att komma in.</p>
+            <p style={{fontSize:'.75rem',color:'#D4A843',marginBottom:24}}>{lang === 'sv' ? 'Kolla innan du går ut' : 'Know before you go'}</p>
+            <p style={{fontSize:'.72rem',color:'#999',marginBottom:16,lineHeight:1.6}}>{t.gateTitle}</p>
             <input
               type="password"
-              placeholder="Lösenord"
+              placeholder={t.gatePassword}
               value={gatePassword}
               onChange={e => { setGatePassword(e.target.value); setGateError(false); }}
               onKeyDown={e => e.key === 'Enter' && tryUnlock()}
               style={{width:'100%',padding:'11px 14px',borderRadius:8,border:gateError ? '1.5px solid #B83230' : '1px solid rgba(255,255,255,.12)',background:'#1e1e1e',color:'#e8e8e8',fontFamily:'inherit',fontSize:'.85rem',marginBottom:12,outline:'none'}}
             />
-            {gateError && <p style={{fontSize:'.7rem',color:'#B83230',marginBottom:8}}>Fel lösenord. Försök igen.</p>}
+            {gateError && <p style={{fontSize:'.7rem',color:'#B83230',marginBottom:8}}>{t.gateWrong}</p>}
             <button
               onClick={tryUnlock}
               style={{width:'100%',padding:'11px',borderRadius:8,border:0,background:'#2D5016',color:'#fff',fontFamily:'inherit',fontSize:'.85rem',fontWeight:700,cursor:'pointer'}}
-            >Öppna</button>
-            <p style={{fontSize:'.6rem',color:'#444',marginTop:16}}>Kontakta oss för åtkomst: info@rovdjursradar.se</p>
+            >{t.gateOpen}</button>
+            <p style={{fontSize:'.6rem',color:'#444',marginTop:16}}>{t.gateContact}</p>
           </div>
         </div>
       )}
