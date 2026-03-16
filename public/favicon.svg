@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1B3A0C"/>
+  <!-- Radar rings -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#2D5016" stroke-width="2" opacity="0.4"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#2D5016" stroke-width="2" opacity="0.3"/>
+  <circle cx="256" cy="256" r="100" fill="none" stroke="#2D5016" stroke-width="2" opacity="0.2"/>
+  <!-- Radar sweep line -->
+  <line x1="256" y1="256" x2="256" y2="56" stroke="#D4A843" stroke-width="3" opacity="0.5"/>
+  <!-- Paw print -->
+  <ellipse cx="210" cy="195" rx="32" ry="38" fill="#D4A843"/>
+  <ellipse cx="305" cy="180" rx="28" ry="34" fill="#D4A843"/>
+  <ellipse cx="370" cy="220" rx="24" ry="30" fill="#D4A843"/>
+  <ellipse cx="155" cy="240" rx="24" ry="30" fill="#D4A843"/>
+  <path d="M170 320 Q200 410 256 425 Q312 410 342 320 Q312 280 256 270 Q200 280 170 320Z" fill="#D4A843"/>
+</svg>
