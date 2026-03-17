@@ -547,11 +547,11 @@ export default function MapApp() {
 
       {/* Neutrality pill */}
       {mobileTab === 'map' && (
-        <div className="fixed z-[890] bg-[rgba(15,15,15,.82)] backdrop-blur-md border border-[rgba(212,168,67,.1)] rounded-lg px-3.5 py-2 left-2 lg:left-[308px] max-w-[320px]"
+        <div className="fixed z-[890] left-2 lg:left-[308px]"
           style={{ top: userLL ? (reporting ? 118 : 86) : (reporting ? 88 : 56) }}>
-          <div className="flex items-start gap-2">
-            <span className="text-[13px] mt-px">🌲</span>
-            <span className="text-[.6rem] leading-[1.5] text-[#b0b0a8]" style={{fontStyle:'italic'}}>{lang === 'sv' ? 'För alla som delar skogen — vi delar information, inte åsikter' : 'For everyone who shares the forest — we share information, not opinions'}</span>
+          <div className="flex items-center gap-2 bg-[rgba(15,15,15,.72)] backdrop-blur-md rounded-full px-3.5 py-1.5 border border-white/[.05]">
+            <span className="w-1 h-1 rounded-full bg-[#D4A843] flex-shrink-0" />
+            <span className="text-[.6rem] text-[#918f86] tracking-wide">{lang === 'sv' ? 'För alla som delar skogen — vi delar information, inte åsikter' : 'For everyone who shares the forest — we share information, not opinions'}</span>
           </div>
         </div>
       )}
