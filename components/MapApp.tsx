@@ -61,6 +61,11 @@ export default function MapApp() {
   const [tileKey, setTileKey] = useState<keyof typeof TILE_LAYERS>('voyager');
   const [toast, setToast] = useState('');
   const [listSort, setListSort] = useState<'time'|'dist'>('time');
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [fbName, setFbName] = useState('');
+  const [fbEmail, setFbEmail] = useState('');
+  const [fbMessage, setFbMessage] = useState('');
+  const [fbSending, setFbSending] = useState(false);
 
   // ─── Language ────────────────────────────────────────────────────────────
   const [lang, setLang] = useState<Lang>('sv');
@@ -484,6 +489,10 @@ export default function MapApp() {
           <a href="/partners" className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-white/[.12] text-[#999] hover:bg-white/[.04]" style={{textDecoration:'none'}}>{t.partners}</a>
           <button onClick={() => showToast('Swish: 123-456 78 90')} className="px-3 py-1 rounded-md text-[.65rem] font-semibold border border-[rgba(212,168,67,.25)] text-[#D4A843]">{t.support}</button>
         </div>
+        <button onClick={() => setFeedbackOpen(true)} className="px-2.5 py-1 rounded-md text-[.58rem] font-bold border border-[rgba(91,154,58,.35)] bg-[rgba(91,154,58,.08)] text-[#8bc76a] hover:bg-[rgba(91,154,58,.15)] transition-colors" style={{whiteSpace:'nowrap'}}>
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#8bc76a] mr-1.5 animate-pulse" style={{verticalAlign:'middle'}} />
+          BETA — {lang === 'sv' ? 'ge feedback' : 'give feedback'}
+        </button>
         <button onClick={toggleLang} className="px-2 py-1 rounded-md text-[.6rem] font-bold border border-white/[.12] text-[#999] hover:bg-white/[.04]">{lang === 'sv' ? 'EN' : 'SV'}</button>
       </nav>
 
@@ -533,6 +542,17 @@ export default function MapApp() {
           style={{ top: reporting ? 88 : 56 }}>
           <span className={`w-2 h-2 rounded-full flex-shrink-0 ${nearbyCount === 0 ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,.4)]' : nearbyCount <= 2 ? 'bg-[#D4A843] shadow-[0_0_6px_rgba(212,168,67,.4)]' : 'bg-[#B83230] shadow-[0_0_6px_rgba(184,50,48,.4)]'}`} />
           <span className="text-[.65rem] text-[#e8e8e8]">{nearbyCount === 0 ? t.noNearby : `${nearbyCount} ${t.nearbyCount}`}</span>
+        </div>
+      )}
+
+      {/* Neutrality pill */}
+      {mobileTab === 'map' && (
+        <div className="fixed z-[890] bg-[rgba(15,15,15,.82)] backdrop-blur-md border border-[rgba(212,168,67,.1)] rounded-lg px-3.5 py-2 left-2 lg:left-[308px] max-w-[320px]"
+          style={{ top: userLL ? (reporting ? 118 : 86) : (reporting ? 88 : 56) }}>
+          <div className="flex items-start gap-2">
+            <span className="text-[13px] mt-px">🌲</span>
+            <span className="text-[.6rem] leading-[1.5] text-[#b0b0a8]" style={{fontStyle:'italic'}}>{lang === 'sv' ? 'För alla som delar skogen — vi delar information, inte åsikter' : 'For everyone who shares the forest — we share information, not opinions'}</span>
+          </div>
         </div>
       )}
 
@@ -656,6 +676,75 @@ export default function MapApp() {
             <div className="about-card-footer" style={{fontSize:'.6rem',color:'#666',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
               <span>Rovdjursradar · Mars 2026</span>
               <span style={{display:'flex',gap:12,alignItems:'center'}}><a href="/integritetspolicy" style={{color:'#666',textDecoration:'none'}}>{t.privacy}</a><span style={{color:'#D4A843'}}>rovdjursradar.se</span></span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ FEEDBACK MODAL ═══ */}
+      {feedbackOpen && (
+        <div className="fixed inset-0 z-[5000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setFeedbackOpen(false)}>
+          <div className="bg-[#161616] border border-white/[.1] rounded-2xl w-full max-w-[420px] overflow-hidden" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="px-5 pt-5 pb-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-[#8bc76a] animate-pulse" />
+                  <span className="text-[.65rem] font-bold tracking-[2px] uppercase text-[#8bc76a]">Beta feedback</span>
+                </div>
+                <button onClick={() => setFeedbackOpen(false)} className="w-7 h-7 rounded-full bg-white/[.06] text-white flex items-center justify-center text-sm hover:bg-white/[.1]">×</button>
+              </div>
+              <h2 className="text-[1.05rem] font-bold text-white mt-2">{lang === 'sv' ? 'Hjälp oss bli bättre' : 'Help us improve'}</h2>
+              <p className="text-[.72rem] text-[#888] mt-1 leading-relaxed">{lang === 'sv' ? 'Berätta vad du tycker — vad funkar, vad fattas, vad kan bli bättre?' : 'Tell us what you think — what works, what\'s missing, what could be better?'}</p>
+            </div>
+
+            {/* Form */}
+            <div className="px-5 pb-5 flex flex-col gap-3">
+              <div>
+                <label className="block text-[.58rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">{lang === 'sv' ? 'Ditt namn' : 'Your name'}</label>
+                <input type="text" value={fbName} onChange={e => setFbName(e.target.value)} placeholder={lang === 'sv' ? 'Valfritt' : 'Optional'}
+                  className="w-full px-3 py-2 rounded-lg border border-white/[.1] bg-[#1e1e1e] text-[#e8e8e8] text-[.8rem] outline-none focus:border-[rgba(91,154,58,.4)] transition-colors" />
+              </div>
+              <div>
+                <label className="block text-[.58rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">{lang === 'sv' ? 'E-post' : 'Email'}</label>
+                <input type="email" value={fbEmail} onChange={e => setFbEmail(e.target.value)} placeholder={lang === 'sv' ? 'Valfritt — om du vill ha svar' : 'Optional — if you want a reply'}
+                  className="w-full px-3 py-2 rounded-lg border border-white/[.1] bg-[#1e1e1e] text-[#e8e8e8] text-[.8rem] outline-none focus:border-[rgba(91,154,58,.4)] transition-colors" />
+              </div>
+              <div>
+                <label className="block text-[.58rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">{lang === 'sv' ? 'Din feedback' : 'Your feedback'} *</label>
+                <textarea value={fbMessage} onChange={e => setFbMessage(e.target.value)} rows={4}
+                  placeholder={lang === 'sv' ? 'Skriv fritt — allt hjälper!' : 'Write freely — everything helps!'}
+                  className="w-full px-3 py-2 rounded-lg border border-white/[.1] bg-[#1e1e1e] text-[#e8e8e8] text-[.8rem] outline-none focus:border-[rgba(91,154,58,.4)] transition-colors resize-none" />
+              </div>
+              <button
+                disabled={!fbMessage.trim() || fbSending}
+                onClick={async () => {
+                  setFbSending(true);
+                  try {
+                    // Try API first, fall back to mailto
+                    const res = await fetch('/api/feedback', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ name: fbName, email: fbEmail, message: fbMessage }),
+                    });
+                    if (res.ok) {
+                      showToast(lang === 'sv' ? '🙏 Tack för din feedback!' : '🙏 Thanks for your feedback!');
+                      setFeedbackOpen(false); setFbName(''); setFbEmail(''); setFbMessage('');
+                    } else {
+                      // Fallback: open mailto
+                      window.location.href = `mailto:info@rovdjursradar.se?subject=${encodeURIComponent('Rovdjursradar Beta Feedback')}&body=${encodeURIComponent(`Namn: ${fbName || 'Anonym'}\nE-post: ${fbEmail || '-'}\n\n${fbMessage}`)}`;
+                      setFeedbackOpen(false);
+                    }
+                  } catch {
+                    window.location.href = `mailto:info@rovdjursradar.se?subject=${encodeURIComponent('Rovdjursradar Beta Feedback')}&body=${encodeURIComponent(`Namn: ${fbName || 'Anonym'}\nE-post: ${fbEmail || '-'}\n\n${fbMessage}`)}`;
+                    setFeedbackOpen(false);
+                  }
+                  setFbSending(false);
+                }}
+                className={`w-full py-2.5 rounded-lg font-bold text-[.82rem] transition-all ${fbMessage.trim() ? 'bg-[#2D5016] text-white hover:bg-[#3a6b1e] cursor-pointer' : 'bg-white/[.04] text-[#444] cursor-not-allowed'}`}>
+                {fbSending ? (lang === 'sv' ? 'Skickar...' : 'Sending...') : (lang === 'sv' ? 'Skicka feedback' : 'Send feedback')}
+              </button>
+              <p className="text-[.58rem] text-[#555] text-center">{lang === 'sv' ? 'Skickas till' : 'Sent to'} info@rovdjursradar.se</p>
             </div>
           </div>
         </div>
