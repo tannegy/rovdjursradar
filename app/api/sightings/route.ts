@@ -1,12 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
+import { supabase } from '@/lib/supabase';
 
 async function hashIP(ip: string): Promise<string> {
   try {
@@ -65,10 +58,8 @@ function calculateTrustScore(input: {
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = getSupabase();
   const params = request.nextUrl.searchParams;
 
-  // Handle flag action
   const flagId = params.get('flag');
   if (flagId) {
     await supabase.from('sightings').update({ flag_count: 1, trust_score: 0.5 }).eq('id', flagId);
@@ -99,13 +90,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = getSupabase();
-
   try {
     const body = await request.json();
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const ipHash = await hashIP(ip);
 
+    // Count recent reports using the shared supabase client
     const { count: recentCount } = await supabase
       .from('sightings')
       .select('*', { count: 'exact', head: true })
