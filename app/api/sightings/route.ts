@@ -1,21 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+import { calculateTrustScore } from '@/lib/trust-score';
 
 function getSupabase() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 }
 
 async function hashIP(ip: string): Promise<string> {
-  const { createHash } = await import('crypto');
-  return createHash('sha256').update(ip + 'rovdjursradar-salt-2026').digest('hex').slice(0, 16);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(ip + (process.env.IP_HASH_SALT || 'rovdjursradar-2026'));
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ═══════════════════════════════════════════════
+// GET — Identical to your existing route
+// ═══════════════════════════════════════════════
 export async function GET(request: NextRequest) {
   const supabase = getSupabase();
   const params = request.nextUrl.searchParams;
@@ -63,6 +77,9 @@ export async function GET(request: NextRequest) {
   });
 }
 
+// ═══════════════════════════════════════════════
+// POST — Now with Safety Layer 1 (GPS trust scoring)
+// ═══════════════════════════════════════════════
 export async function POST(request: NextRequest) {
   const supabase = getSupabase();
 
@@ -71,20 +88,51 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const ipHash = await hashIP(ip);
 
-    const { data: allowed } = await supabase.rpc('check_rate_limit', { client_ip: ipHash });
-    if (!allowed) {
+    // Count recent reports from this IP
+    const { count: recentCount } = await supabase
+      .from('sightings')
+      .select('*', { count: 'exact', head: true })
+      .eq('ip_hash', ipHash)
+      .gte('created_at', new Date(Date.now() - 3600000).toISOString());
+
+    // ─── SAFETY LAYER 1: Calculate trust score server-side ───
+    const trustResult = calculateTrustScore({
+      device_type: body.device_type || 'unknown',
+      gps_accuracy: body.gps_accuracy ?? null,
+      user_lat: body.user_lat ?? null,
+      user_lng: body.user_lng ?? null,
+      report_lat: body.latitude,
+      report_lng: body.longitude,
+      ip_hash: ipHash,
+      recent_reports_count: recentCount || 0,
+    });
+
+    // Block if trust engine says no
+    if (trustResult.blocked) {
       return NextResponse.json(
-        { error: 'Du har skickat for manga rapporter. Vanta en timme.' },
+        {
+          error: trustResult.block_reason || 'Rapporten blockerades.',
+          trust_score: trustResult.score,
+          trust_factors: trustResult.factors,
+        },
         { status: 429 }
       );
     }
 
+    // Validate required fields
     const { predator_type, observation_type, source, latitude, longitude, sighted_at, count, notes } = body;
 
     if (!predator_type || !latitude || !longitude) {
-      return NextResponse.json({ error: 'Art och plats kravs.' }, { status: 400 });
+      return NextResponse.json({ error: 'Art och plats krävs.' }, { status: 400 });
     }
 
+    // Calculate distance for storage
+    let dist_km: number | null = null;
+    if (body.user_lat != null && body.user_lng != null) {
+      dist_km = Math.round(haversineKm(body.user_lat, body.user_lng, latitude, longitude) * 10) / 10;
+    }
+
+    // Insert with server-calculated trust score
     const { data, error } = await supabase
       .from('sightings')
       .insert([{
@@ -97,6 +145,10 @@ export async function POST(request: NextRequest) {
         count: Math.min(Math.max(count || 1, 1), 50),
         notes: notes?.slice(0, 500) || null,
         ip_hash: ipHash,
+        trust_score: trustResult.score,
+        device_type: body.device_type || 'unknown',
+        gps_accuracy: body.gps_accuracy ?? null,
+        distance_km: dist_km,
         verified: false,
       }])
       .select()
@@ -106,7 +158,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json({
+      ...data,
+      trust_factors: trustResult.factors,
+    }, { status: 201 });
+
   } catch (err) {
     return NextResponse.json({ error: 'Ogiltigt format.' }, { status: 400 });
   }

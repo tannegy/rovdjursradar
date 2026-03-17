@@ -11,6 +11,8 @@ import { SPECIES, OBS_TYPES, SOURCES, COUNTIES, TILE_LAYERS, timeAgo, distKm } f
 import { translations, Lang } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 import type { Sighting } from '@/lib/supabase';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import TrustScorePanel from '@/components/TrustScorePanel';
 
 declare module 'leaflet' {
   function heatLayer(latlngs: any[], options?: any): any;
@@ -27,6 +29,7 @@ const PawLogo = ({ size = 18 }: { size?: number }) => <svg viewBox="0 0 40 40" f
 type MobileTab = 'map' | 'list' | 'filter';
 
 export default function MapApp() {
+  const geo = useGeolocation();
   const mapRef = useRef<L.Map | null>(null);
   const mapEl = useRef<HTMLDivElement>(null);
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
@@ -240,7 +243,7 @@ export default function MapApp() {
     try {
       const res = await fetch('/api/sightings', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ predator_type: rptSpecies, observation_type: rptObs, source: rptSource, latitude: ll.lat, longitude: ll.lng, sighted_at: rptTime || new Date().toISOString(), count: rptCount, notes: rptNotes || null }),
+        body: JSON.stringify({ predator_type: rptSpecies, observation_type: rptObs, source: rptSource, latitude: ll.lat, longitude: ll.lng, sighted_at: rptTime || new Date().toISOString(), count: rptCount, notes: rptNotes || null, device_type: geo.deviceType, gps_accuracy: geo.accuracy, user_lat: geo.lat, user_lng: geo.lng }),
       });
       if (!res.ok) { const err = await res.json(); showToast(err.error || 'Något gick fel'); return; }
       closeReport(); fetchSightings(); showToast(t.reportSuccess);
@@ -458,6 +461,7 @@ export default function MapApp() {
         <label className="block text-[.6rem] font-semibold text-[#666] mb-1 uppercase tracking-widest">{t.reportNote}</label>
         <textarea value={rptNotes} onChange={e => setRptNotes(e.target.value)} placeholder={t.reportNotePlaceholder} className="w-full px-2 py-1.5 rounded-lg border border-white/[.12] bg-[#1e1e1e] text-[#e8e8e8] text-[.75rem] resize-y min-h-[48px]" />
       </div>
+      <TrustScorePanel geo={geo} reportLat={reportLL?.lat ?? null} reportLng={reportLL?.lng ?? null} />
       <button onClick={submitReport} className="w-full py-2.5 rounded-lg bg-[#2D5016] text-white font-bold text-[.82rem] hover:bg-[#3a6b1e]">{t.reportSubmit}</button>
     </div>
   );
